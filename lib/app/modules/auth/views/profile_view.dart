@@ -124,7 +124,7 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              _authController.user!.fullName ?? 'Flight Enthusiast',
+              _authController.user?.fullName ?? 'Flight Enthusiast',
               style: AppTextStyles.headline5,
               textAlign: TextAlign.center,
             ),

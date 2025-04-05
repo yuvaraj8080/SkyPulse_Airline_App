@@ -5,10 +5,9 @@ class Constants {
   static String supabaseUrl = dotenv.env['SUPABASE_URL']!;
   static final String supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
 
-  // Flight API (using Aviationstack as example)
-  static const String aviationStackBaseUrl = 'https://api.aviationstack.com/v1/';
- 
-  static final String aviationStackApiKey = dotenv.env['AVIATION_STACK_API_KEY']!;// Get from env in production
+  // AeroDataBox API from RapidAPI
+  static const String aeroDataBoxBaseUrl = 'https://aerodatabox.p.rapidapi.com';
+  static final String aeroDataBoxApiKey = dotenv.env['AERODATABOX_API_KEY']!; // Get from env in production
 
   // Map API Keys
   static const String googleMapsApiKey = 'your-google-maps-api-key'; // Get from env in production

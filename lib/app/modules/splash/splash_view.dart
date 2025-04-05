@@ -7,7 +7,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController authController = Get.find<AuthController>();
+    final AuthController authController = Get.put(AuthController());
 
     // Trigger auth check when screen loads
     Future.delayed(Duration.zero, () async {

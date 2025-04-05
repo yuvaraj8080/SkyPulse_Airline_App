@@ -12,9 +12,7 @@ import '../../../data/models/user_model.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_text_styles.dart';
-import '../../../utils/helpers.dart';
 import '../../../widgets/flight_card.dart';
-import '../../../widgets/loading_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -39,6 +37,13 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final AuthController authController = Get.find<AuthController>();
+    final FlightController flightController = Get.find<FlightController>();
+    final SubscriptionController subscriptionController = Get.find<SubscriptionController>();
+
+    // Load saved flights when home tab is shown
+    flightController.loadSavedFlights();
+
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -92,12 +97,29 @@ class _HomeTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SkyPulse'),
+        title: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.flight, color: AppColors.primary),
+            ),
+            SizedBox(width: 8),
+            Text('SkyPulse', style: AppTextStyles.headline6),
+          ],
+        ),
         actions: [
+          IconButton(
+            onPressed: () => flightController.loadSavedFlights(),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Flights',
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // Show notifications or go to notification settings
               Get.toNamed(Routes.PROFILE);
             },
           ),
@@ -109,19 +131,28 @@ class _HomeTab extends StatelessWidget {
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildWelcomeSection(authController),
-              const SizedBox(height: 24),
-              _buildQuickSearchSection(),
-              const SizedBox(height: 24),
+              _buildWelcomeHeader(authController),
+              const SizedBox(height: 20),
               _buildUpcomingFlightsSection(flightController),
               const SizedBox(height: 24),
-              _buildSubscriptionCard(subscriptionController),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Quick Actions',
+                  style: AppTextStyles.headline5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildQuickActionGrid(),
               const SizedBox(height: 24),
-              _buildFlightStats(),
+              if (subscriptionController.currentSubscription == SubscriptionType.free)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _buildSubscriptionCard(subscriptionController),
+                ),
               const SizedBox(height: 32),
             ],
           ),
@@ -130,136 +161,90 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeSection(AuthController authController) {
+  Widget _buildWelcomeHeader(AuthController authController) {
     return Animate(
       effects: const [FadeEffect(), SlideEffect()],
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
+      child: Container(
+        margin: EdgeInsets.all(16),
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.primary.withBlue(180)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Obx(
-                () => Text(
-                  'Welcome, ${authController.user?.fullName ?? 'Traveler'}!',
-                  style: AppTextStyles.headline4.copyWith(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Track your flight status, delays, and more',
-                style: AppTextStyles.subtitle1.copyWith(color: Colors.white.withOpacity(0.9)),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Get.toNamed(Routes.FLIGHT_SEARCH);
-                },
-                icon: const Icon(Icons.search),
-                label: const Text('Track a Flight'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickSearchSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Quick Search', style: AppTextStyles.headline5),
-        const SizedBox(height: 16),
-        Animate(
-          effects: const [
-            FadeEffect(delay: Duration(milliseconds: 200)),
-            SlideEffect(delay: Duration(milliseconds: 200))
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
           ],
-          child: IntrinsicHeight(
-            child: Row(
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Obx(
+              () => Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    radius: 24,
+                    child: Text(
+                      authController.user?.fullName?.isNotEmpty == true
+                          ? authController.user!.fullName![0].toUpperCase()
+                          : 'T',
+                      style: AppTextStyles.headline5.copyWith(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hello,',
+                        style: AppTextStyles.subtitle2.copyWith(
+                          color: Colors.white.withOpacity(0.8),
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      Text(
+                        '${authController.user?.fullName ?? 'Traveler'}',
+                        style: AppTextStyles.headline5.copyWith(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Where are you flying today?',
+              style: AppTextStyles.subtitle1.copyWith(color: Colors.white.withOpacity(0.9)),
+            ),
+            SizedBox(height: 20),
+            Row(
               children: [
                 Expanded(
-                  child: _buildQuickSearchCard(
-                    icon: Icons.flight_takeoff,
-                    title: 'Flight Number',
-                    subtitle: 'Search by flight code',
-                    onTap: () {
+                  child: ElevatedButton.icon(
+                    onPressed: () {
                       Get.toNamed(Routes.FLIGHT_SEARCH);
                     },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildQuickSearchCard(
-                    icon: Icons.location_on_outlined,
-                    title: 'Airport',
-                    subtitle: 'Search by route',
-                    onTap: () {
-                      Get.toNamed(Routes.FLIGHT_SEARCH);
-                      // Switch to route tab - would need to be implemented
-                    },
+                    icon: const Icon(Icons.search),
+                    label: const Text('Track a Flight'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 3,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickSearchCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                color: AppColors.primary,
-                size: 28,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: AppTextStyles.subtitle1,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: AppTextStyles.bodyText2.copyWith(
-                  color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -268,28 +253,40 @@ class _HomeTab extends StatelessWidget {
   Widget _buildUpcomingFlightsSection(FlightController flightController) {
     return Obx(() {
       if (flightController.isLoading) {
-        return const LoadingWidget();
+        return const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        );
       }
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Your Flights', style: AppTextStyles.headline5),
-              TextButton(
-                onPressed: () {
-                  Get.toNamed(Routes.SAVED_FLIGHTS);
-                },
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.button.copyWith(color: AppColors.primary),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.flight_takeoff, color: AppColors.primary, size: 20),
+                    SizedBox(width: 8),
+                    Text('Your Flights', style: AppTextStyles.headline5),
+                  ],
                 ),
-              ),
-            ],
+                TextButton(
+                  onPressed: () {
+                    Get.toNamed(Routes.SAVED_FLIGHTS);
+                  },
+                  child: Text(
+                    'View All',
+                    style: AppTextStyles.button.copyWith(color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           if (flightController.savedFlights.isEmpty)
             _buildNoSavedFlightsCard()
           else
@@ -302,19 +299,34 @@ class _HomeTab extends StatelessWidget {
   Widget _buildNoSavedFlightsCard() {
     return Animate(
       effects: const [FadeEffect(delay: Duration(milliseconds: 300)), SlideEffect(delay: Duration(milliseconds: 300))],
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              const Icon(
-                Icons.flight,
-                size: 48,
-                color: AppColors.lightTextSecondary,
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.flight,
+                  size: 36,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -330,12 +342,20 @@ class _HomeTab extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
                 onPressed: () {
                   Get.toNamed(Routes.FLIGHT_SEARCH);
                 },
-                child: const Text('Track a Flight'),
+                icon: Icon(Icons.search),
+                label: Text('Search Flights'),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  side: BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ],
           ),
@@ -348,271 +368,207 @@ class _HomeTab extends StatelessWidget {
     // Show up to 2 flights in the home view
     final displayFlights = flightController.savedFlights.take(2).toList();
 
-    return Column(
-      children: [
-        for (var i = 0; i < displayFlights.length; i++)
-          Animate(
-            effects: [
-              FadeEffect(delay: Duration(milliseconds: 300 + (i * 100))),
-              SlideEffect(delay: Duration(milliseconds: 300 + (i * 100))),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: FlightCard(
-                flight: displayFlights[i],
-                onTap: () {
-                  flightController.setSelectedFlight(displayFlights[i]);
-                  Get.toNamed(
-                    Routes.FLIGHT_DETAIL,
-                    arguments: {'flightNumber': displayFlights[i].flightNumber},
-                  );
-                },
-                showFavoriteIcon: true,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSubscriptionCard(SubscriptionController subscriptionController) {
-    return Obx(() {
-      if (subscriptionController.currentSubscription != SubscriptionType.free) {
-        // User already has a subscription
-        return _buildCurrentSubscriptionCard(subscriptionController);
-      }
-
-      return Animate(
-        effects: const [
-          FadeEffect(delay: Duration(milliseconds: 400)),
-          SlideEffect(delay: Duration(milliseconds: 400))
-        ],
-        child: Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              gradient: AppColors.accentGradient,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Premium Features',
-                      style: AppTextStyles.headline5.copyWith(color: Colors.white),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Upgrade to get priority notifications, detailed flight predictions, and more!',
-                  style: AppTextStyles.bodyText2.copyWith(color: Colors.white.withOpacity(0.9)),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // Learn more about subscription
-                          Get.toNamed(Routes.SUBSCRIPTION);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Learn More'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Go to subscription page
-                          Get.toNamed(Routes.SUBSCRIPTION);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.accent,
-                        ),
-                        child: const Text('Upgrade'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildCurrentSubscriptionCard(SubscriptionController subscriptionController) {
-    final subscriptionType = subscriptionController.currentSubscription;
-    final expiryDate = subscriptionController.expiryDate;
-
-    String expiryText;
-    if (expiryDate != null) {
-      expiryText = 'Valid until ${formatDate(expiryDate)}';
-    } else {
-      expiryText = 'Active subscription';
+    // If we have no flights at this point, try loading them again
+    if (displayFlights.isEmpty) {
+      flightController.loadSavedFlights();
     }
 
-    return Animate(
-      effects: const [FadeEffect(delay: Duration(milliseconds: 400)), SlideEffect(delay: Duration(milliseconds: 400))],
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: subscriptionType == SubscriptionType.premium
-                ? AppColors.premiumSubscription.withOpacity(0.2)
-                : AppColors.proSubscription.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: subscriptionType == SubscriptionType.premium
-                  ? AppColors.premiumSubscription
-                  : AppColors.proSubscription,
-              width: 1,
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      itemCount: displayFlights.length,
+      itemBuilder: (context, index) {
+        return Animate(
+          effects: [
+            FadeEffect(delay: Duration(milliseconds: 300 + (index * 100))),
+            SlideEffect(delay: Duration(milliseconds: 300 + (index * 100))),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: FlightCard(
+              flight: displayFlights[index],
+              onTap: () {
+                flightController.setSelectedFlight(displayFlights[index]);
+                Get.toNamed(
+                  Routes.FLIGHT_DETAIL,
+                  arguments: {'flightNumber': displayFlights[index].flightNumber},
+                );
+              },
+              showFavoriteIcon: true,
+              isDetailed: true, // Set to true to show more details
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    subscriptionType == SubscriptionType.premium ? Icons.star : Icons.workspace_premium,
-                    color: subscriptionType == SubscriptionType.premium
-                        ? AppColors.premiumSubscription
-                        : AppColors.proSubscription,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    subscriptionType == SubscriptionType.premium ? 'Premium Subscription' : 'Pro Subscription',
-                    style: AppTextStyles.headline5,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Thank you for supporting Flight Tracker!',
-                style: AppTextStyles.bodyText1,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                expiryText,
-                style: AppTextStyles.subtitle2.copyWith(
-                  color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // Go to manage subscription
-                  Get.toNamed(Routes.SUBSCRIPTION);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: subscriptionType == SubscriptionType.premium
-                      ? AppColors.premiumSubscription
-                      : AppColors.proSubscription,
-                ),
-                child: const Text('Manage Subscription'),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildFlightStats() {
-    return Animate(
-      effects: const [FadeEffect(delay: Duration(milliseconds: 500)), SlideEffect(delay: Duration(milliseconds: 500))],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Flight Stats', style: AppTextStyles.headline5),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  title: 'On-Time Rating',
-                  value: '82%',
-                  icon: Icons.timelapse,
-                  color: AppColors.success,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  title: 'Delay Prediction',
-                  value: 'Low',
-                  icon: Icons.assessment,
-                  color: AppColors.info,
-                ),
-              ),
-            ],
-          ),
-        ],
+  Widget _buildQuickActionGrid() {
+    final actions = [
+      {
+        'icon': Icons.flight_takeoff,
+        'color': AppColors.primary,
+        'title': 'Flight Number',
+        'route': Routes.FLIGHT_SEARCH,
+      },
+      {
+        'icon': Icons.location_on_outlined,
+        'color': AppColors.info,
+        'title': 'Airport Routes',
+        'route': Routes.FLIGHT_SEARCH,
+      },
+      {
+        'icon': Icons.calendar_today,
+        'color': AppColors.success,
+        'title': 'Flight Date',
+        'route': Routes.FLIGHT_SEARCH,
+      },
+      {
+        'icon': Icons.favorite_border,
+        'color': AppColors.accent,
+        'title': 'Saved Flights',
+        'route': Routes.SAVED_FLIGHTS,
+      },
+    ];
+
+    return GridView.builder(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.5,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
+      itemCount: actions.length,
+      itemBuilder: (context, index) {
+        return Animate(
+          effects: [
+            FadeEffect(delay: Duration(milliseconds: 200 + (index * 100))),
+            SlideEffect(delay: Duration(milliseconds: 200 + (index * 100))),
+          ],
+          child: _buildQuickActionCard(
+            icon: actions[index]['icon'] as IconData,
+            color: actions[index]['color'] as Color,
+            title: actions[index]['title'] as String,
+            onTap: () => Get.toNamed(actions[index]['route'] as String),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
+  Widget _buildQuickActionCard({
     required IconData icon,
     required Color color,
+    required String title,
+    required VoidCallback onTap,
   }) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: AppTextStyles.headline4.copyWith(
-                color: color,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: AppTextStyles.subtitle2.copyWith(
-                color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              SizedBox(height: 10),
+              Text(
+                title,
+                style: AppTextStyles.subtitle2.copyWith(fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionCard(SubscriptionController subscriptionController) {
+    return Animate(
+      effects: const [FadeEffect(delay: Duration(milliseconds: 400)), SlideEffect(delay: Duration(milliseconds: 400))],
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.accent, AppColors.accent.withRed(230)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Upgrade to Premium',
+                    style: AppTextStyles.subtitle1.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Get early delay notifications, detailed flight predictions, and more!',
+                style: AppTextStyles.bodyText2.copyWith(color: Colors.white.withOpacity(0.9)),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Get.toNamed(Routes.SUBSCRIPTION);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.accent,
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text('Upgrade Now'),
+              ),
+            ],
+          ),
         ),
       ),
     );

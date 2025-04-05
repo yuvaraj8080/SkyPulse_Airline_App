@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flight_tracker/app/data/models/ticket_model.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../data/models/flight_model.dart';
 import '../data/repositories/flight_repository.dart';
@@ -9,9 +12,10 @@ import '../utils/helpers.dart';
 import 'auth_controller.dart';
 
 class FlightController extends GetxController {
-  final FlightRepository _flightRepository = FlightRepository();
-  final UserRepository _userRepository = UserRepository();
-  final AuthController _authController = Get.find<AuthController>();
+  final FlightRepository _flightRepository;
+  final UserRepository _userRepository;
+  final AuthController _authController;
+
   final RxList<Ticket> selectedTicket = <Ticket>[].obs;
   final RxBool _isLoading = false.obs;
   final RxList<Flight> _flights = <Flight>[].obs;
@@ -19,6 +23,17 @@ class FlightController extends GetxController {
   final Rx<Flight?> _selectedFlight = Rx<Flight?>(null);
   final RxList<String> _recentSearches = <String>[].obs;
   final RxBool _isConnected = true.obs;
+  final RxString _lastUpdated = RxString('');
+  final RxInt _refreshInterval = 60.obs;
+  Timer? _refreshTimer;
+
+  FlightController({
+    required FlightRepository flightRepository,
+    required UserRepository userRepository,
+    required AuthController authController,
+  })  : _flightRepository = flightRepository,
+        _userRepository = userRepository,
+        _authController = authController;
 
   bool get isLoading => _isLoading.value;
   List<Flight> get flights => _flights.toList();
@@ -27,6 +42,7 @@ class FlightController extends GetxController {
   List<String> get recentSearches => _recentSearches.toList();
   bool get isConnected => _isConnected.value;
   List<Ticket> get tickets => selectedTicket.toList();
+  String get lastUpdated => _lastUpdated.value;
 
   @override
   void onInit() {
@@ -34,45 +50,84 @@ class FlightController extends GetxController {
     _checkConnectivity();
     _monitorConnectivity();
     loadSavedFlights();
-    Future.delayed(Duration.zero, () {
-      loadRecentSearches();
-    });
+    loadRecentSearches();
+    _startRefreshTimer();
   }
 
-  // Check initial connectivity
+  @override
+  void onClose() {
+    _refreshTimer?.cancel();
+    super.onClose();
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(
+      Duration(seconds: _refreshInterval.value),
+      (timer) {
+        if (_selectedFlight.value != null && _isConnected.value) {
+          refreshFlightInfo(_selectedFlight.value!.flightNumber);
+          _lastUpdated.value = 'Last updated: ${DateFormat('h:mm a').format(DateTime.now())}';
+        }
+      },
+    );
+  }
+
+  void setRefreshInterval(int seconds) {
+    _refreshInterval.value = seconds;
+    _startRefreshTimer();
+  }
+
   Future<void> _checkConnectivity() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     _isConnected.value = connectivityResult != ConnectivityResult.none;
   }
 
-  // Monitor connectivity changes
   void _monitorConnectivity() {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      Future.delayed(Duration.zero, () {
-        _isConnected.value = result != ConnectivityResult.none;
-      });
-
-      if (_isConnected.value && _selectedFlight.value != null) {
-        refreshFlightInfo(_selectedFlight.value!.flightNumber);
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      if (results.isNotEmpty) {
+        _isConnected.value = results.first != ConnectivityResult.none;
+        if (_isConnected.value && _selectedFlight.value != null) {
+          refreshFlightInfo(_selectedFlight.value!.flightNumber);
+        }
       }
     });
   }
 
-  // Get flight by flight number
+  String getDelayStatus() {
+    if (_selectedFlight.value == null) return 'Unknown';
+    return _selectedFlight.value!.getDelayStatusText();
+  }
+
+  double getOnTimePercentage() {
+    if (_selectedFlight.value == null) return 0.0;
+    return _selectedFlight.value!.onTimePercentage ?? 0.0;
+  }
+
   Future<void> getFlightByNumber(String flightNumber) async {
     if (flightNumber.isEmpty) return;
 
     _isLoading.value = true;
-
     try {
       final flight = await _flightRepository.getFlightByNumber(flightNumber);
-
       if (flight != null) {
-        // Check if this flight is favorited
         final isFavorite = _flightRepository.isFlightFavorite(flightNumber);
-        _selectedFlight.value = flight.copyWith(isFavorite: isFavorite);
 
-        // Save this search to recent searches
+        // Get flight history to calculate additional metrics
+        final history = await _flightRepository.getFlightHistory(flightNumber);
+        final onTimePercentage = _flightRepository.calculateOnTimePercentage(history);
+
+        // Get alternative routes and delay history
+        final alternativeRoutes = await _flightRepository.getAlternativeRoutes(flightNumber);
+        final delayHistory = await _flightRepository.generateDelayHistory(flightNumber);
+
+        _selectedFlight.value = flight.copyWith(
+          isFavorite: isFavorite,
+          onTimePercentage: onTimePercentage,
+          alternativeRoutes: alternativeRoutes,
+          delayHistory: delayHistory,
+        );
+
         if (_authController.isAuthenticated) {
           await _userRepository.saveRecentSearch(
             _authController.user!.id,
@@ -90,7 +145,6 @@ class FlightController extends GetxController {
     }
   }
 
-  // Search flights by airports
   Future<void> searchFlights({
     required String departureAirport,
     required String arrivalAirport,
@@ -99,7 +153,6 @@ class FlightController extends GetxController {
     if (departureAirport.isEmpty || arrivalAirport.isEmpty) return;
 
     _isLoading.value = true;
-
     try {
       final result = await _flightRepository.searchFlights(
         departureAirport: departureAirport,
@@ -109,7 +162,6 @@ class FlightController extends GetxController {
 
       _flights.value = result;
 
-      // Save this search to recent searches
       if (_authController.isAuthenticated) {
         final searchQuery = '$departureAirport to $arrivalAirport';
         await _userRepository.saveRecentSearch(
@@ -125,24 +177,33 @@ class FlightController extends GetxController {
     }
   }
 
-  // Set selected flight
   void setSelectedFlight(Flight flight) {
     _selectedFlight.value = flight;
   }
 
-  // Refresh current flight info
   Future<void> refreshFlightInfo(String flightNumber) async {
     if (flightNumber.isEmpty) return;
 
     _isLoading.value = true;
-
     try {
       final flight = await _flightRepository.getFlightByNumber(flightNumber);
-
       if (flight != null) {
-        // Preserve the favorite status from the previous flight
-        final isFavorite = _selectedFlight.value?.isFavorite ?? _flightRepository.isFlightFavorite(flightNumber);
-        _selectedFlight.value = flight.copyWith(isFavorite: isFavorite);
+        final isFavorite = _flightRepository.isFlightFavorite(flightNumber);
+
+        // Get flight history to calculate additional metrics
+        final history = await _flightRepository.getFlightHistory(flightNumber);
+        final onTimePercentage = _flightRepository.calculateOnTimePercentage(history);
+
+        // Get alternative routes and delay history
+        final alternativeRoutes = await _flightRepository.getAlternativeRoutes(flightNumber);
+        final delayHistory = await _flightRepository.generateDelayHistory(flightNumber);
+
+        _selectedFlight.value = flight.copyWith(
+          isFavorite: isFavorite,
+          onTimePercentage: onTimePercentage,
+          alternativeRoutes: alternativeRoutes,
+          delayHistory: delayHistory,
+        );
       }
     } catch (e) {
       print('Error refreshing flight info: $e');
@@ -151,80 +212,90 @@ class FlightController extends GetxController {
     }
   }
 
-  // Save/unsave a flight to favorites
   Future<void> toggleFavoriteFlight(Flight flight) async {
     try {
       final isFavorite = _flightRepository.isFlightFavorite(flight.flightNumber);
 
       if (isFavorite) {
-        // Remove from favorites
         await _flightRepository.removeFavoriteFlight(flight.flightNumber);
-
-        // If user is authenticated, also remove from cloud
         if (_authController.isAuthenticated) {
           await _userRepository.removeSavedFlight(
             _authController.user!.id,
             flight.flightNumber,
           );
         }
-
         showSuccessSnackBar(message: 'Flight removed from favorites');
       } else {
-        // Add to favorites
         await _flightRepository.saveFavoriteFlight(flight);
-
-        // If user is authenticated, also save to cloud
         if (_authController.isAuthenticated) {
           await _userRepository.saveFlight(_authController.user!.id, flight);
         }
-
         showSuccessSnackBar(message: 'Flight saved to favorites');
       }
 
-      // Update the selected flight if it's the same one
       if (_selectedFlight.value?.flightNumber == flight.flightNumber) {
         _selectedFlight.value = _selectedFlight.value?.copyWith(
           isFavorite: !isFavorite,
         );
       }
 
-      // Refresh saved flights list
       loadSavedFlights();
     } catch (e) {
       showErrorSnackBar(message: 'Error: ${e.toString()}');
     }
   }
 
-  // Load saved flights
   Future<void> loadSavedFlights() async {
+    _isLoading.value = true;
     try {
-      // Get local saved flights
+      // First get local favorites
       List<Flight> flights = _flightRepository.getFavoriteFlights();
 
-      // If user is authenticated, merge with cloud saved flights
+      // Then get cloud favorites if user is authenticated
       if (_authController.isAuthenticated) {
-        final cloudFlights = await _userRepository.getSavedFlights(
-          _authController.user!.id,
-        );
+        try {
+          final cloudFlights = await _userRepository.getSavedFlights(
+            _authController.user!.id,
+          );
 
-        // Merge both lists, avoiding duplicates
-        for (final cloudFlight in cloudFlights) {
-          if (!flights.any((f) => f.flightNumber == cloudFlight.flightNumber)) {
-            flights.add(cloudFlight);
+          // For each cloud flight
+          for (final cloudFlight in cloudFlights) {
+            // Check if we already have this flight locally
+            final existingIndex = flights.indexWhere((f) => f.flightNumber == cloudFlight.flightNumber);
+
+            if (existingIndex >= 0) {
+              // Replace with updated cloud version
+              flights[existingIndex] = cloudFlight;
+            } else {
+              // Add new flight from cloud
+              flights.add(cloudFlight);
+            }
           }
+        } catch (e) {
+          print('Error loading cloud saved flights: $e');
+          // Continue with local flights if cloud fails
         }
       }
 
-      _savedFlights.value = flights;
+      // Set favorite flag for all flights explicitly
+      final markedFavorites = flights.map((f) => f.copyWith(isFavorite: true)).toList();
+
+      _savedFlights.value = markedFavorites;
+      print('Loaded ${_savedFlights.length} saved flights');
+
+      // Cache flights for offline use
+      if (markedFavorites.isNotEmpty) {
+        await _flightRepository.saveFavoriteFlight(markedFavorites.first);
+      }
     } catch (e) {
       print('Error loading saved flights: $e');
+    } finally {
+      _isLoading.value = false;
     }
   }
 
-  // Load recent searches
   Future<void> loadRecentSearches() async {
     if (!_authController.isAuthenticated) return;
-
     try {
       final user = await _userRepository.getCurrentUser();
       if (user != null) {
@@ -235,10 +306,8 @@ class FlightController extends GetxController {
     }
   }
 
-  // Clear recent searches
   Future<void> clearRecentSearches() async {
     if (!_authController.isAuthenticated) return;
-
     try {
       await _userRepository.clearRecentSearches(_authController.user!.id);
       _recentSearches.clear();
@@ -248,7 +317,6 @@ class FlightController extends GetxController {
     }
   }
 
-  // Clear flight cache
   Future<void> clearFlightCache() async {
     try {
       await _flightRepository.clearFlightCache();
@@ -258,7 +326,6 @@ class FlightController extends GetxController {
     }
   }
 
-  // Get airport information
   Future<Map<String, dynamic>?> getAirportInfo(String airportCode) async {
     try {
       return await _flightRepository.getAirportInfo(airportCode);
@@ -268,7 +335,6 @@ class FlightController extends GetxController {
     }
   }
 
-  // Get airline information
   Future<Map<String, dynamic>?> getAirlineInfo(String airlineCode) async {
     try {
       return await _flightRepository.getAirlineInfo(airlineCode);
@@ -278,78 +344,71 @@ class FlightController extends GetxController {
     }
   }
 
-  // Check if a flight is favorited
-  // bool isFlightFavorite(String flightNumber) {
-  //   return _flightRepository.isFlightFavorite(flightNumber);
-  // }
-  //   // Get on-time rating based on flight history and current conditions
-  // double getOnTimeRating() {
-  //   try {
-  //     if (_selectedFlight.value == null) return 0.0;
+  Future<List<Flight>> getFlightHistory(String flightNumber, {int days = 7}) async {
+    try {
+      return await _flightRepository.getFlightHistory(flightNumber, days: days);
+    } catch (e) {
+      print('Error getting flight history: $e');
+      return [];
+    }
+  }
 
-  //     // Calculate base rating from flight status
-  //     double baseRating = _selectedFlight.value!.isCancelled ? 0.0 :
-  //                        _selectedFlight.value!.isDelayed() ? 60.0 : 90.0;
+  Future<List<FlightRoute>> getAlternativeRoutes(String flightNumber) async {
+    try {
+      return await _flightRepository.getAlternativeRoutes(flightNumber);
+    } catch (e) {
+      print('Error getting alternative routes: $e');
+      return [];
+    }
+  }
 
-  //     // Adjust based on weather conditions
-  //     if (_selectedFlight.value!.departureWeather?.condition.toLowerCase().contains('storm') ?? false) {
-  //       baseRating *= 0.8;
-  //     }
+  Future<List<FlightDelay>> getDelayHistory(String flightNumber, {int days = 30}) async {
+    try {
+      return await _flightRepository.generateDelayHistory(flightNumber, days: days);
+    } catch (e) {
+      print('Error getting delay history: $e');
+      return [];
+    }
+  }
 
-  //     return baseRating;
-  //   } catch (e) {
-  //     print('Error calculating on-time rating: $e');
-  //     return 0.0;
-  //   }
-  // }
+  Future<Map<String, dynamic>?> getAircraftInfo(String registrationNumber) async {
+    try {
+      return await _flightRepository.getAircraftInfo(registrationNumber);
+    } catch (e) {
+      print('Error getting aircraft info: $e');
+      return null;
+    }
+  }
 
-  // // Get delay prediction status
-  // String getDelayPrediction() {
-  //   try {
-  //     if (_selectedFlight.value == null) return 'Unknown';
+  Future<Map<String, dynamic>?> getFlightStatus(String flightNumber, String date) async {
+    try {
+      return await _flightRepository.getFlightStatus(flightNumber, date);
+    } catch (e) {
+      print('Error getting flight status: $e');
+      return null;
+    }
+  }
 
-  //     // Check weather conditions
-  //     bool hasBadWeather = _selectedFlight.value!.departureWeather?.condition.toLowerCase().contains('storm') ?? false ||
-  //                         _selectedFlight.value!.arrivalWeather?.condition.toLowerCase().contains('storm') ?? false;
-
-  //     // Check current delay status
-  //     if (_selectedFlight.value!.isDelayed()) {
-  //       return _selectedFlight.value!.delayMinutes! > 60 ? 'High' : 'Medium';
-  //     }
-
-  //     // Predict based on conditions
-  //     if (hasBadWeather) {
-  //       return 'Medium';
-  //     }
-
-  //     return 'Low';
-  //   } catch (e) {
-  //     print('Error calculating delay prediction: $e');
-  //     return 'Unknown';
-  //   }
-  // }
+  Future<Map<String, List<Flight>>> getAirportSchedule(String airportCode, String date) async {
+    try {
+      return await _flightRepository.getAirportSchedule(airportCode, date);
+    } catch (e) {
+      print('Error getting airport schedule: $e');
+      return {'arrivals': [], 'departures': []};
+    }
+  }
 
   Future<void> getFlightByTicket(String ticketNumber) async {
     if (ticketNumber.isEmpty) return;
-
     _isLoading.value = true;
-
     try {
-      // Step 1: Get ticket details
       final ticket = await _flightRepository.getTicketDetails(ticketNumber);
-
       if (ticket != null) {
         selectedTicket.add(ticket);
-
-        // Step 2: Also get the flight details
         final flight = await _flightRepository.getFlightByNumber(ticket.flightNumber);
-
         if (flight != null) {
-          // Check if this flight is favorited
           final isFavorite = _flightRepository.isFlightFavorite(flight.flightNumber);
           _selectedFlight.value = flight.copyWith(isFavorite: isFavorite);
-
-          // Save this search to recent searches
           if (_authController.isAuthenticated) {
             await _userRepository.saveRecentSearch(
               _authController.user!.id,
@@ -357,7 +416,6 @@ class FlightController extends GetxController {
             );
             loadRecentSearches();
           }
-
           showSuccessSnackBar(message: 'Ticket found');
         } else {
           showWarningSnackBar(message: 'Ticket found but flight details unavailable');
@@ -372,7 +430,6 @@ class FlightController extends GetxController {
     }
   }
 
-  // Clear selected ticket
   void clearSelectedTicket() {
     selectedTicket.clear();
   }

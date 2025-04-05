@@ -1,12 +1,13 @@
-import 'package:get/get.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../providers/supabase_provider.dart';
-import '../models/user_model.dart';
+
 import '../models/flight_model.dart';
+import '../models/user_model.dart';
+import '../providers/supabase_provider.dart';
 
 class UserRepository {
   final SupabaseProvider _supabaseProvider = SupabaseProvider();
-  
+  final logger = Logger();
   // Authentication methods
   Future<User?> signUp(String email, String password, String? fullName) async {
     try {
@@ -16,28 +17,28 @@ class UserRepository {
       rethrow;
     }
   }
-  
+
   Future<User?> signIn(String email, String password) async {
     try {
       final user = await _supabaseProvider.signIn(email, password);
-      
+
       if (user != null) {
         // Save authentication state to preferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_authenticated', true);
       }
-      
+
       return user;
     } catch (e) {
       print('Error signing in: $e');
       rethrow;
     }
   }
-  
+
   Future<void> signOut() async {
     try {
       await _supabaseProvider.signOut();
-      
+
       // Clear authentication state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_authenticated', false);
@@ -46,7 +47,7 @@ class UserRepository {
       rethrow;
     }
   }
-  
+
   Future<User?> getCurrentUser() async {
     try {
       return await _supabaseProvider.getCurrentUser();
@@ -55,7 +56,17 @@ class UserRepository {
       return null;
     }
   }
-  
+
+  // Refreshes the user profile by fetching the latest data from Supabase
+  Future<User?> refreshUserProfile(String userId) async {
+    try {
+      return await _supabaseProvider.refreshUserProfile(userId);
+    } catch (e) {
+      print('Error refreshing user profile: $e');
+      return null;
+    }
+  }
+
   Future<void> resetPassword(String email) async {
     try {
       await _supabaseProvider.resetPassword(email);
@@ -64,7 +75,7 @@ class UserRepository {
       rethrow;
     }
   }
-  
+
   // User profile methods
   Future<User?> updateUserProfile(String userId, Map<String, dynamic> data) async {
     try {
@@ -74,7 +85,7 @@ class UserRepository {
       rethrow;
     }
   }
-  
+
   // Saved flights methods
   Future<List<Flight>> getSavedFlights(String userId) async {
     try {
@@ -84,7 +95,7 @@ class UserRepository {
       return [];
     }
   }
-  
+
   Future<bool> saveFlight(String userId, Flight flight) async {
     try {
       return await _supabaseProvider.saveFlight(userId, flight);
@@ -93,7 +104,7 @@ class UserRepository {
       return false;
     }
   }
-  
+
   Future<bool> removeSavedFlight(String userId, String flightNumber) async {
     try {
       return await _supabaseProvider.removeSavedFlight(userId, flightNumber);
@@ -102,7 +113,7 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // Recent searches methods
   Future<void> saveRecentSearch(String userId, String searchQuery) async {
     try {
@@ -111,7 +122,7 @@ class UserRepository {
       print('Error saving recent search: $e');
     }
   }
-  
+
   Future<void> clearRecentSearches(String userId) async {
     try {
       await _supabaseProvider.clearRecentSearches(userId);
@@ -119,7 +130,7 @@ class UserRepository {
       print('Error clearing recent searches: $e');
     }
   }
-  
+
   // Subscription methods
   Future<bool> updateSubscription(String userId, SubscriptionType type, DateTime expiryDate) async {
     try {
@@ -129,7 +140,7 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // Check authentication state from local storage
   Future<bool> isAuthenticated() async {
     try {
@@ -140,7 +151,7 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // Save user settings locally
   Future<void> saveUserSettings(Map<String, dynamic> settings) async {
     try {
@@ -160,7 +171,7 @@ class UserRepository {
       print('Error saving user settings: $e');
     }
   }
-  
+
   // Get user settings from local storage
   Future<Map<String, dynamic>> getUserSettings() async {
     try {

@@ -1,270 +1,395 @@
-import 'package:get/get.dart';
+import 'package:equatable/equatable.dart';
 
-class Flight {
+class Flight extends Equatable {
   final String flightNumber;
   final String airline;
-  final String status;
-  final DateTime departureTime;
-  final DateTime arrivalTime;
+  final String airlineName;
   final String departureAirport;
-  final String departureCity;
-  final String departureCountry;
-  final String departureTerminal;
-  final String departureGate;
   final String arrivalAirport;
+  final String departureCity;
   final String arrivalCity;
-  final String arrivalCountry;
-  final String arrivalTerminal;
-  final String arrivalGate;
-  final String aircraft;
-  final Duration duration;
-  final int distanceKm;
-  final double? delayMinutes;
+  final DateTime? scheduledDeparture;
+  final DateTime? scheduledArrival;
+  final DateTime? actualDeparture;
+  final DateTime? actualArrival;
+  final String status;
+  final int departureDelayMinutes;
+  final int arrivalDelayMinutes;
   final bool isCancelled;
-  final List<FlightPosition>? positions;
+  final bool isDiverted;
+  final String aircraftRegistration;
+  final String aircraftType;
+  final double? onTimePercentage;
+  final List<FlightRoute> alternativeRoutes;
+  final List<FlightDelay> delayHistory;
   final bool isFavorite;
+  final String? terminal;
+  final String? gate;
+  final double? distance;
+  final int? flightDuration;
+  final List<String>? flightServices;
 
-  Flight({
+  const Flight({
     required this.flightNumber,
     required this.airline,
-    required this.status,
-    required this.departureTime,
-    required this.arrivalTime,
+    required this.airlineName,
     required this.departureAirport,
-    required this.departureCity,
-    required this.departureCountry,
-    required this.departureTerminal,
-    required this.departureGate,
     required this.arrivalAirport,
+    required this.departureCity,
     required this.arrivalCity,
-    required this.arrivalCountry,
-    required this.arrivalTerminal,
-    required this.arrivalGate,
-    required this.aircraft,
-    required this.duration,
-    required this.distanceKm,
-    this.delayMinutes,
+    this.scheduledDeparture,
+    this.scheduledArrival,
+    this.actualDeparture,
+    this.actualArrival,
+    required this.status,
+    this.departureDelayMinutes = 0,
+    this.arrivalDelayMinutes = 0,
     this.isCancelled = false,
-    this.positions,
+    this.isDiverted = false,
+    this.aircraftRegistration = '',
+    this.aircraftType = '',
+    this.onTimePercentage,
+    this.alternativeRoutes = const [],
+    this.delayHistory = const [],
     this.isFavorite = false,
+    this.terminal,
+    this.gate,
+    this.distance,
+    this.flightDuration,
+    this.flightServices,
   });
 
-  Flight copyWith({
-    String? flightNumber,
-    String? airline,
-    String? status,
-    DateTime? departureTime,
-    DateTime? arrivalTime,
-    String? departureAirport,
-    String? departureCity,
-    String? departureCountry,
-    String? departureTerminal,
-    String? departureGate,
-    String? arrivalAirport,
-    String? arrivalCity,
-    String? arrivalCountry,
-    String? arrivalTerminal,
-    String? arrivalGate,
-    String? aircraft,
-    Duration? duration,
-    int? distanceKm,
-    double? delayMinutes,
-    bool? isCancelled,
-    List<FlightPosition>? positions,
-    bool? isFavorite,
-  }) {
+  // Helper method to check if flight is delayed
+  bool isDelayed() {
+    return departureDelayMinutes > 15 || arrivalDelayMinutes > 15;
+  }
+
+  // Helper method to check if flight is on time
+  bool isOnTime() {
+    return !isDelayed() && !isCancelled && !isDiverted;
+  }
+
+  // Helper method to get delay status text
+  String getDelayStatusText() {
+    if (isCancelled) return 'Cancelled';
+    if (isDiverted) return 'Diverted';
+    if (departureDelayMinutes > 120 || arrivalDelayMinutes > 120) return 'Severely Delayed';
+    if (departureDelayMinutes > 60 || arrivalDelayMinutes > 60) return 'Very Delayed';
+    if (departureDelayMinutes > 15 || arrivalDelayMinutes > 15) return 'Delayed';
+    return 'On Time';
+  }
+
+  // Factory method to create from AeroDataBox API response
+  factory Flight.fromAeroDataBoxApi(Map<String, dynamic> json) {
+    final departure = json['departure'] ?? {};
+    final arrival = json['arrival'] ?? {};
+    final aircraft = json['aircraft'] ?? {};
+    final airline = json['airline'] ?? {};
+    final flightStatus = json['status'] ?? 'Unknown';
+
+    // Handle DateTime parsing safely
+    DateTime? parseDateTime(Map<String, dynamic>? timeData) {
+      if (timeData == null || timeData['utc'] == null) return null;
+      try {
+        return DateTime.parse(timeData['utc']);
+      } catch (e) {
+        print('Error parsing DateTime: $e');
+        return null;
+      }
+    }
+
+    // Handle integer values safely
+    int parseIntValue(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is bool) return value ? 1 : 0;
+      try {
+        // For string values, handle both numeric strings and other formats
+        final stringValue = value.toString().trim();
+        if (stringValue.isEmpty) return 0;
+
+        // Try parsing as double first to handle decimal strings
+        return double.parse(stringValue).toInt();
+      } catch (e) {
+        print('Error parsing int value: $e for $value');
+        return 0;
+      }
+    }
+
+    // Handle double values safely
+    double? parseDoubleValue(dynamic value) {
+      if (value == null) return null;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      try {
+        return double.parse(value.toString());
+      } catch (e) {
+        print('Error parsing double value: $e for $value');
+        return null;
+      }
+    }
+
+    // Extract distance safely
+    double? distance;
+    if (json['greatCircleDistance'] != null) {
+      try {
+        if (json['greatCircleDistance'] is Map) {
+          // AeroDataBox returns a Map with different units - we'll use km
+          final distanceMap = json['greatCircleDistance'] as Map;
+          if (distanceMap.containsKey('km')) {
+            distance = parseDoubleValue(distanceMap['km']);
+          }
+        } else {
+          distance = parseDoubleValue(json['greatCircleDistance']);
+        }
+      } catch (e) {
+        print('Error parsing distance: $e');
+      }
+    }
+
+    // Calculate flight duration if not provided
+    int? flightDuration;
+    if (json['flightTime'] != null) {
+      try {
+        if (json['flightTime'] is String) {
+          flightDuration = parseIntValue(json['flightTime']);
+        } else if (json['flightTime'] is int) {
+          flightDuration = json['flightTime'];
+        } else if (json['flightTime'] is double) {
+          flightDuration = json['flightTime'].toInt();
+        }
+      } catch (e) {
+        print('Error parsing flightTime: $e');
+      }
+    } else {
+      // If flightTime is not provided, estimate based on scheduled times
+      final scheduledDep = parseDateTime(departure['scheduledTime']);
+      final scheduledArr = parseDateTime(arrival['scheduledTime']);
+      if (scheduledDep != null && scheduledArr != null) {
+        final diff = scheduledArr.difference(scheduledDep).inMinutes;
+        if (diff > 0) flightDuration = diff;
+      }
+    }
+
     return Flight(
-      flightNumber: flightNumber ?? this.flightNumber,
-      airline: airline ?? this.airline,
-      status: status ?? this.status,
-      departureTime: departureTime ?? this.departureTime,
-      arrivalTime: arrivalTime ?? this.arrivalTime,
-      departureAirport: departureAirport ?? this.departureAirport,
-      departureCity: departureCity ?? this.departureCity,
-      departureCountry: departureCountry ?? this.departureCountry,
-      departureTerminal: departureTerminal ?? this.departureTerminal,
-      departureGate: departureGate ?? this.departureGate,
-      arrivalAirport: arrivalAirport ?? this.arrivalAirport,
-      arrivalCity: arrivalCity ?? this.arrivalCity,
-      arrivalCountry: arrivalCountry ?? this.arrivalCountry,
-      arrivalTerminal: arrivalTerminal ?? this.arrivalTerminal,
-      arrivalGate: arrivalGate ?? this.arrivalGate,
-      aircraft: aircraft ?? this.aircraft,
-      duration: duration ?? this.duration,
-      distanceKm: distanceKm ?? this.distanceKm,
-      delayMinutes: delayMinutes ?? this.delayMinutes,
-      isCancelled: isCancelled ?? this.isCancelled,
-      positions: positions ?? this.positions,
-      isFavorite: isFavorite ?? this.isFavorite,
+      flightNumber: json['number'] ?? '',
+      airline: airline['iata'] ?? '',
+      airlineName: airline['name'] ?? '',
+      departureAirport: departure['airport']?['iata'] ?? '',
+      arrivalAirport: arrival['airport']?['iata'] ?? '',
+      departureCity: departure['airport']?['municipalityName'] ?? departure['airport']?['name'] ?? '',
+      arrivalCity: arrival['airport']?['municipalityName'] ?? arrival['airport']?['name'] ?? '',
+      scheduledDeparture: parseDateTime(departure['scheduledTime']),
+      scheduledArrival: parseDateTime(arrival['scheduledTime']),
+      actualDeparture: parseDateTime(departure['actualTime']),
+      actualArrival: parseDateTime(arrival['actualTime']),
+      status: flightStatus,
+      departureDelayMinutes: parseIntValue(departure['delay']),
+      arrivalDelayMinutes: parseIntValue(arrival['delay']),
+      isCancelled: flightStatus.toLowerCase() == 'cancelled',
+      isDiverted: flightStatus.toLowerCase() == 'diverted',
+      aircraftRegistration: aircraft['reg'] ?? '',
+      aircraftType: aircraft['model'] ?? '',
+      terminal: departure['terminal'] ?? arrival['terminal'],
+      gate: departure['gate'] ?? arrival['gate'],
+      distance: distance,
+      flightDuration: flightDuration,
     );
   }
 
+  // Method to convert Flight object to JSON
   Map<String, dynamic> toJson() {
     return {
       'flightNumber': flightNumber,
       'airline': airline,
-      'status': status,
-      'departureTime': departureTime.toIso8601String(),
-      'arrivalTime': arrivalTime.toIso8601String(),
+      'airlineName': airlineName,
       'departureAirport': departureAirport,
-      'departureCity': departureCity,
-      'departureCountry': departureCountry,
-      'departureTerminal': departureTerminal,
-      'departureGate': departureGate,
       'arrivalAirport': arrivalAirport,
+      'departureCity': departureCity,
       'arrivalCity': arrivalCity,
-      'arrivalCountry': arrivalCountry,
-      'arrivalTerminal': arrivalTerminal,
-      'arrivalGate': arrivalGate,
-      'aircraft': aircraft,
-      'duration': duration.inMinutes,
-      'distanceKm': distanceKm,
-      'delayMinutes': delayMinutes,
+      'scheduledDeparture': scheduledDeparture?.toIso8601String(),
+      'scheduledArrival': scheduledArrival?.toIso8601String(),
+      'actualDeparture': actualDeparture?.toIso8601String(),
+      'actualArrival': actualArrival?.toIso8601String(),
+      'status': status,
+      'departureDelayMinutes': departureDelayMinutes,
+      'arrivalDelayMinutes': arrivalDelayMinutes,
       'isCancelled': isCancelled,
-      'positions': positions?.map((position) => position.toJson()).toList(),
+      'isDiverted': isDiverted,
+      'aircraftRegistration': aircraftRegistration,
+      'aircraftType': aircraftType,
+      'onTimePercentage': onTimePercentage,
+      'alternativeRoutes': alternativeRoutes.map((route) => route.toJson()).toList(),
+      'delayHistory': delayHistory.map((delay) => delay.toJson()).toList(),
       'isFavorite': isFavorite,
+      'terminal': terminal,
+      'gate': gate,
+      'distance': distance,
+      'flightDuration': flightDuration,
+      'flightServices': flightServices,
     };
   }
 
-  factory Flight.fromJson(Map<String, dynamic> json) {
+  // Create a copy of Flight with some fields changed
+  Flight copyWith({
+    String? flightNumber,
+    String? airline,
+    String? airlineName,
+    String? departureAirport,
+    String? arrivalAirport,
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? scheduledDeparture,
+    DateTime? scheduledArrival,
+    DateTime? actualDeparture,
+    DateTime? actualArrival,
+    String? status,
+    int? departureDelayMinutes,
+    int? arrivalDelayMinutes,
+    bool? isCancelled,
+    bool? isDiverted,
+    String? aircraftRegistration,
+    String? aircraftType,
+    double? onTimePercentage,
+    List<FlightRoute>? alternativeRoutes,
+    List<FlightDelay>? delayHistory,
+    bool? isFavorite,
+    String? terminal,
+    String? gate,
+    double? distance,
+    int? flightDuration,
+    List<String>? flightServices,
+  }) {
     return Flight(
-      flightNumber: json['flightNumber'],
-      airline: json['airline'],
-      status: json['status'],
-      departureTime: DateTime.parse(json['departureTime']),
-      arrivalTime: DateTime.parse(json['arrivalTime']),
-      departureAirport: json['departureAirport'],
-      departureCity: json['departureCity'],
-      departureCountry: json['departureCountry'],
-      departureTerminal: json['departureTerminal'] ?? '',
-      departureGate: json['departureGate'] ?? '',
-      arrivalAirport: json['arrivalAirport'],
-      arrivalCity: json['arrivalCity'],
-      arrivalCountry: json['arrivalCountry'],
-      arrivalTerminal: json['arrivalTerminal'] ?? '',
-      arrivalGate: json['arrivalGate'] ?? '',
-      aircraft: json['aircraft'] ?? 'Unknown',
-      duration: Duration(minutes: json['duration']),
-      distanceKm: json['distanceKm'] ?? 0,
-      delayMinutes: json['delayMinutes'],
-      isCancelled: json['isCancelled'] ?? false,
-      positions: json['positions'] != null
-          ? (json['positions'] as List)
-              .map((position) => FlightPosition.fromJson(position))
-              .toList()
-          : null,
-      isFavorite: json['isFavorite'] ?? false,
+      flightNumber: flightNumber ?? this.flightNumber,
+      airline: airline ?? this.airline,
+      airlineName: airlineName ?? this.airlineName,
+      departureAirport: departureAirport ?? this.departureAirport,
+      arrivalAirport: arrivalAirport ?? this.arrivalAirport,
+      departureCity: departureCity ?? this.departureCity,
+      arrivalCity: arrivalCity ?? this.arrivalCity,
+      scheduledDeparture: scheduledDeparture ?? this.scheduledDeparture,
+      scheduledArrival: scheduledArrival ?? this.scheduledArrival,
+      actualDeparture: actualDeparture ?? this.actualDeparture,
+      actualArrival: actualArrival ?? this.actualArrival,
+      status: status ?? this.status,
+      departureDelayMinutes: departureDelayMinutes ?? this.departureDelayMinutes,
+      arrivalDelayMinutes: arrivalDelayMinutes ?? this.arrivalDelayMinutes,
+      isCancelled: isCancelled ?? this.isCancelled,
+      isDiverted: isDiverted ?? this.isDiverted,
+      aircraftRegistration: aircraftRegistration ?? this.aircraftRegistration,
+      aircraftType: aircraftType ?? this.aircraftType,
+      onTimePercentage: onTimePercentage ?? this.onTimePercentage,
+      alternativeRoutes: alternativeRoutes ?? this.alternativeRoutes,
+      delayHistory: delayHistory ?? this.delayHistory,
+      isFavorite: isFavorite ?? this.isFavorite,
+      terminal: terminal ?? this.terminal,
+      gate: gate ?? this.gate,
+      distance: distance ?? this.distance,
+      flightDuration: flightDuration ?? this.flightDuration,
+      flightServices: flightServices ?? this.flightServices,
     );
   }
 
-  // Parse from Aviation Stack API response
-  factory Flight.fromAviationStackApi(Map<String, dynamic> json) {
-    final flight = json['flight'];
-    final departure = json['departure'];
-    final arrival = json['arrival'];
-    final aircraft = json['aircraft'] ?? {};
-    final airline = json['airline'] ?? {};
-    final status = json['flight_status'] ?? 'scheduled';
-    
-    return Flight(
-      flightNumber: flight['iata'] ?? flight['icao'] ?? 'Unknown',
-      airline: airline['name'] ?? 'Unknown Airline',
-      status: status,
-      departureTime: departure['scheduled'] != null 
-          ? DateTime.parse(departure['scheduled']) 
-          : DateTime.now(),
-      arrivalTime: arrival['scheduled'] != null 
-          ? DateTime.parse(arrival['scheduled']) 
-          : DateTime.now().add(const Duration(hours: 2)),
-      departureAirport: departure['iata'] ?? departure['icao'] ?? 'Unknown',
-      departureCity: departure['airport'] ?? 'Unknown City',
-      departureCountry: departure['country'] ?? 'Unknown Country',
-      departureTerminal: departure['terminal'] ?? '',
-      departureGate: departure['gate'] ?? '',
-      arrivalAirport: arrival['iata'] ?? arrival['icao'] ?? 'Unknown',
-      arrivalCity: arrival['airport'] ?? 'Unknown City',
-      arrivalCountry: arrival['country'] ?? 'Unknown Country',
-      arrivalTerminal: arrival['terminal'] ?? '',
-      arrivalGate: arrival['gate'] ?? '',
-      aircraft: aircraft['registration'] ?? 'Unknown',
-      duration: Duration(minutes: json['flight_duration'] ?? 120),
-      distanceKm: json['distance'] ?? 0,
-      delayMinutes: departure['delay'] != null ? double.parse(departure['delay'].toString()) : null,
-      isCancelled: status.toLowerCase() == 'cancelled',
-      positions: null,
-      isFavorite: false,
-    );
-  }
-  
-  bool isDelayed() {
-    return delayMinutes != null && delayMinutes! > 0;
-  }
-  
-  bool isDeparted() {
-    return DateTime.now().isAfter(departureTime);
-  }
-  
-  bool isArrived() {
-    return DateTime.now().isAfter(arrivalTime);
-  }
-  
-  bool isInFlight() {
-    final now = DateTime.now();
-    return now.isAfter(departureTime) && now.isBefore(arrivalTime);
-  }
-  
-  double getProgressPercentage() {
-    if (!isDeparted()) {
-      return 0.0;
-    }
-    
-    if (isArrived()) {
-      return 1.0;
-    }
-    
-    final totalDuration = arrivalTime.difference(departureTime).inMinutes;
-    final elapsedDuration = DateTime.now().difference(departureTime).inMinutes;
-    
-    return elapsedDuration / totalDuration;
-  }
+  @override
+  List<Object?> get props => [
+        flightNumber,
+        airline,
+        departureAirport,
+        arrivalAirport,
+        scheduledDeparture,
+        scheduledArrival,
+        status,
+        isCancelled,
+        isDiverted,
+        isFavorite,
+      ];
 }
 
-class FlightPosition {
-  final double latitude;
-  final double longitude;
-  final double? altitude;
-  final double? speed;
-  final double? heading;
-  final DateTime timestamp;
+class FlightRoute {
+  final String departureAirport;
+  final String arrivalAirport;
+  final String airline;
+  final String flightNumber;
+  final double? reliability;
 
-  FlightPosition({
-    required this.latitude,
-    required this.longitude,
-    this.altitude,
-    this.speed,
-    this.heading,
-    required this.timestamp,
+  FlightRoute({
+    required this.departureAirport,
+    required this.arrivalAirport,
+    required this.airline,
+    required this.flightNumber,
+    this.reliability,
   });
+
+  factory FlightRoute.fromApi(Map<String, dynamic> json) {
+    return FlightRoute(
+      departureAirport: json['departure_airport'] ?? '',
+      arrivalAirport: json['arrival_airport'] ?? '',
+      airline: json['airline'] ?? '',
+      flightNumber: json['flight_number'] ?? '',
+      reliability: json['reliability']?.toDouble(),
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
-      'latitude': latitude,
-      'longitude': longitude,
-      'altitude': altitude,
-      'speed': speed,
-      'heading': heading,
-      'timestamp': timestamp.toIso8601String(),
+      'departureAirport': departureAirport,
+      'arrivalAirport': arrivalAirport,
+      'airline': airline,
+      'flightNumber': flightNumber,
+      'reliability': reliability,
     };
   }
 
-  factory FlightPosition.fromJson(Map<String, dynamic> json) {
-    return FlightPosition(
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      altitude: json['altitude'],
-      speed: json['speed'],
-      heading: json['heading'],
-      timestamp: DateTime.parse(json['timestamp']),
+  factory FlightRoute.fromJson(Map<String, dynamic> json) {
+    return FlightRoute(
+      departureAirport: json['departureAirport'],
+      arrivalAirport: json['arrivalAirport'],
+      airline: json['airline'],
+      flightNumber: json['flightNumber'],
+      reliability: json['reliability'],
+    );
+  }
+}
+
+class FlightDelay {
+  final DateTime date;
+  final int departureDelay;
+  final int arrivalDelay;
+  final String reason;
+
+  FlightDelay({
+    required this.date,
+    required this.departureDelay,
+    required this.arrivalDelay,
+    required this.reason,
+  });
+
+  factory FlightDelay.fromApi(Map<String, dynamic> json) {
+    return FlightDelay(
+      date: DateTime.parse(json['date']),
+      departureDelay: json['departure_delay'] ?? 0,
+      arrivalDelay: json['arrival_delay'] ?? 0,
+      reason: json['reason'] ?? 'Unknown',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.toIso8601String(),
+      'departureDelay': departureDelay,
+      'arrivalDelay': arrivalDelay,
+      'reason': reason,
+    };
+  }
+
+  factory FlightDelay.fromJson(Map<String, dynamic> json) {
+    return FlightDelay(
+      date: DateTime.parse(json['date']),
+      departureDelay: json['departureDelay'],
+      arrivalDelay: json['arrivalDelay'],
+      reason: json['reason'],
     );
   }
 }

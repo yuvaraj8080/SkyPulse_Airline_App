@@ -67,11 +67,11 @@ class AppPages {
       page: () => const FlightDetailView(),
       transition: Transition.rightToLeft,
     ),
-    GetPage(
-      name: FLIGHT_MAP,
-      page: () => const FlightMapView(),
-      transition: Transition.fadeIn,
-    ),
+    // GetPage(
+    //   name: FLIGHT_MAP,
+    //   page: () => const FlightMapView(),
+    //   transition: Transition.fadeIn,
+    // ),
     GetPage(
       name: SAVED_FLIGHTS,
       page: () => SavedFlightsView(),
