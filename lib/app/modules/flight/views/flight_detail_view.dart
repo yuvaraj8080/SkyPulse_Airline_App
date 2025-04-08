@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -5,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../../controllers/flight_controller.dart';
 import '../../../data/models/flight_model.dart';
-import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_text_styles.dart';
-import '../../../utils/helpers.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/loading_widget.dart';
 
@@ -47,24 +48,6 @@ class _FlightDetailViewState extends State<FlightDetailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Flight Details', style: AppTextStyles.headline6),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshFlightData,
-          ),
-          Obx(
-            () => IconButton(
-              icon: Icon(
-                _flightController.selectedFlight?.isFavorite == true ? Icons.favorite : Icons.favorite_border,
-              ),
-              color: _flightController.selectedFlight?.isFavorite == true ? AppColors.accent : null,
-              onPressed: _toggleFavorite,
-            ),
-          ),
-        ],
-      ),
       body: Obx(
         () => _flightController.isLoading
             ? const LoadingWidget()
@@ -113,10 +96,6 @@ class _FlightDetailViewState extends State<FlightDetailView> {
       expandedHeight: 0,
       pinned: true,
       backgroundColor: Get.isDarkMode ? AppColors.darkBackground : AppColors.primary,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Get.isDarkMode ? Colors.white : Colors.white),
-        onPressed: () => Get.back(),
-      ),
       title: Text(
         '${flight.airlineName} ${flight.flightNumber}',
         style: TextStyle(
@@ -1910,7 +1889,9 @@ class _FlightDetailViewState extends State<FlightDetailView> {
           ],
           child: CustomButton(
             text: 'Share Flight Details',
-            onPressed: () => _shareFlightDetails(flight),
+            onPressed: () {
+              // shareFlightDetails(flight);
+            },
             icon: Icons.share,
           ),
         ),
@@ -1923,7 +1904,9 @@ class _FlightDetailViewState extends State<FlightDetailView> {
             ],
             child: CustomButton(
               text: 'Set Notification',
-              onPressed: () => _setFlightNotification(flight),
+              onPressed: () {
+                // _setFlightNotification(flight);
+              },
               icon: Icons.notifications,
               buttonType: ButtonType.outlined,
             ),
@@ -2417,14 +2400,6 @@ class _FlightDetailViewState extends State<FlightDetailView> {
     }
   }
 
-  void _shareFlightDetails(Flight flight) {
-    // Implementation of _shareFlightDetails method
-  }
-
-  void _setFlightNotification(Flight flight) {
-    // Implementation of _setFlightNotification method
-  }
-
   Widget _buildAircraftDetails(Flight flight) {
     return Animate(
       effects: const [FadeEffect(delay: Duration(milliseconds: 400)), SlideEffect(delay: Duration(milliseconds: 400))],
@@ -2452,9 +2427,9 @@ class _FlightDetailViewState extends State<FlightDetailView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildDetailItem('Aircraft', flight.aircraft ?? 'Unknown'),
+                        _buildDetailItem('Aircraft', flight.aircraftType),
                         SizedBox(height: 12),
-                        _buildDetailItem('Registration', flight.registration ?? 'Unknown'),
+                        _buildDetailItem('Registration', flight.aircraftRegistration),
                       ],
                     ),
                   ),
@@ -2462,7 +2437,7 @@ class _FlightDetailViewState extends State<FlightDetailView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildDetailItem('Airline', flight.airlineName),
+                        _buildDetailItem('Airline', flight.airline),
                         SizedBox(height: 12),
                         _buildDetailItem('Flight', flight.flightNumber),
                       ],
@@ -2499,6 +2474,67 @@ class _FlightDetailViewState extends State<FlightDetailView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailLabel(String label) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 12,
+        color: AppColors.secondary,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildDateValue(DateTime? dateTime) {
+    if (dateTime == null) {
+      return Text(
+        'Not scheduled',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.primary,
+        ),
+      );
+    }
+
+    final formattedDate = DateFormat('HH:mm, dd MMM').format(dateTime);
+    return Text(
+      formattedDate,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: AppColors.primary,
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.secondary,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value.toString(),
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.primary,
+            fontWeight: FontWeight.w500,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 

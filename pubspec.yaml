@@ -29,6 +29,7 @@ dependencies:
   logger: ^2.5.0
   path_provider: ^2.0.15
   purchases_flutter: ^8.7.0
+  share_plus: ^10.1.4
   shared_preferences: ^2.1.1
   supabase_flutter: ^2.8.4
   timeago: ^3.4.0
