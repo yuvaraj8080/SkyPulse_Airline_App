@@ -27,7 +27,7 @@ class AppTheme {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       titleTextStyle: AppTextStyles.headline6.copyWith(color: Colors.white),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.lightSurface,
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -110,7 +110,7 @@ class AppTheme {
         textStyle: AppTextStyles.button,
       ),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.lightTextSecondary,
       indicatorSize: TabBarIndicatorSize.label,
@@ -148,7 +148,7 @@ class AppTheme {
       secondaryLabelStyle: AppTextStyles.caption.copyWith(color: Colors.white),
       brightness: Brightness.light,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: AppColors.lightSurface,
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -180,7 +180,7 @@ class AppTheme {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       titleTextStyle: AppTextStyles.headline6.copyWith(color: AppColors.darkText),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.darkSurface,
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -263,7 +263,7 @@ class AppTheme {
         textStyle: AppTextStyles.button,
       ),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.darkTextSecondary,
       indicatorSize: TabBarIndicatorSize.label,
@@ -301,7 +301,7 @@ class AppTheme {
       secondaryLabelStyle: AppTextStyles.caption.copyWith(color: Colors.white),
       brightness: Brightness.dark,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: AppColors.darkSurface,
       elevation: 8,
       shape: RoundedRectangleBorder(

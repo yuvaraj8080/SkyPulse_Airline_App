@@ -8,7 +8,7 @@ import '../../../widgets/custom_button.dart';
 import '../../../widgets/loading_widget.dart';
 
 class LoginView extends StatelessWidget {
-  final AuthController _authController = Get.find<AuthController>();
+  final AuthController _authController = Get.put(AuthController());
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();

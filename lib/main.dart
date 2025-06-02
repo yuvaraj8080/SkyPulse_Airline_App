@@ -36,18 +36,19 @@ Future<void> _initializeApp() async {
     // 2. Initialize storage solutions
     await _initializeStorage();
 
-    // 3. Set device orientation
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-
     // 4. Initialize Supabase with proper session persistence
     await Supabase.initialize(
       url: Constants.supabaseUrl,
       anonKey: Constants.supabaseAnonKey,
       debug: true,
     );
+
+    // 3. Set device orientation
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
 
     // 5. Initialize other dependencies
     await _initializeDependencies();
