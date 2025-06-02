@@ -96,7 +96,7 @@ Future<void> _initializeDependencies() async {
 }
 
 class FlightTrackerApp extends StatelessWidget {
-  const FlightTrackerApp({super.key});̊
+  const FlightTrackerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
