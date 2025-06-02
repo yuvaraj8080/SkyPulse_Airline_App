@@ -225,7 +225,7 @@ class SupabaseProvider {
         final authUser = _client.auth.currentUser;
         if (authUser != null && authUser.id == userId) {
           final userData = {
-            'id': userId,
+              'id': userId,
             'email': authUser.email,
             'created_at': DateTime.now().toIso8601String(),
             ...data,

@@ -96,7 +96,7 @@ Future<void> _initializeDependencies() async {
 }
 
 class FlightTrackerApp extends StatelessWidget {
-  const FlightTrackerApp({super.key});
+  const FlightTrackerApp({super.key});̊
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +115,7 @@ class FlightTrackerApp extends StatelessWidget {
   String _getInitialRoute() {
     try {
       final authController = Get.find<AuthController>();
-      return authController.isAuthenticated ? Routes.HOME : Routes.LOGIN;
+      return authController.isAuthenticated ? Routes.HOME : Routes.HOME;
     } catch (e) {
       logger.e('Error getting auth status: $e');
       return Routes.LOGIN;
