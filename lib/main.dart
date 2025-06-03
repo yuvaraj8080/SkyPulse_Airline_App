@@ -115,7 +115,7 @@ class FlightTrackerApp extends StatelessWidget {
   String _getInitialRoute() {
     try {
       final authController = Get.find<AuthController>();
-      return authController.isAuthenticated ? Routes.HOME : Routes.HOME;
+      return authController.isAuthenticated ? Routes.HOME : Routes.LOGIN;
     } catch (e) {
       logger.e('Error getting auth status: $e');
       return Routes.LOGIN;
