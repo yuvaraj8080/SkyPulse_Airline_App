@@ -462,7 +462,7 @@ class FlightApiProvider {
     for (var i = 0; i < maxRetries; i++) {
       try {
         return await request();
-      } on dio.DioException catch (e) {
+      } on dio.DioException {
         if (i == maxRetries - 1) rethrow;
         await Future.delayed(delay);
       }
@@ -479,12 +479,12 @@ class FlightApiProvider {
     // Create more realistic mock data based on AeroDataBox API format
     return {
       "number": "$airlineCode$flightNumber",
-      "callSign": "${airlineCode}${flightNumber}",
+      "callSign": "$airlineCode$flightNumber",
       "status": "EnRoute",
       "codeshareStatus": "IsOperator",
       "isCargo": false,
       "aircraft": {
-        "reg": "N${Random().nextInt(999)}${airlineCode}",
+        "reg": "N${Random().nextInt(999)}$airlineCode",
         "modeS": "A${Random().nextInt(9999)}",
         "model": _getAircraftModel(airlineCode),
         "image": null

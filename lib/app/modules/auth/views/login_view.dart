@@ -13,7 +13,7 @@ class LoginView extends StatelessWidget {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  LoginView({Key? key}) : super(key: key);
+  LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {

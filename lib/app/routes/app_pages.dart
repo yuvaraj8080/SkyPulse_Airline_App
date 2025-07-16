@@ -5,7 +5,6 @@ import '../modules/auth/views/login_view.dart';
 import '../modules/auth/views/profile_view.dart';
 import '../modules/auth/views/signup_view.dart';
 import '../modules/flight/views/flight_detail_view.dart';
-import '../modules/flight/views/flight_map_view.dart';
 import '../modules/flight/views/flight_search_view.dart';
 import '../modules/flight/views/saved_flights_view.dart';
 import '../modules/home/views/home_view.dart';

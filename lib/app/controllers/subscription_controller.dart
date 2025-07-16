@@ -232,11 +232,9 @@ class SubscriptionController extends GetxController {
         return;
       }
       
-      if (purchaserInfo != null) {
-        // Update from RevenueCat info
-        await _handlePurchaseInfo(purchaserInfo);
-      }
-      
+      // Update from RevenueCat info
+      await _handlePurchaseInfo(purchaserInfo);
+          
       // Sync with user info from Supabase (use as fallback or to overwrite)
       if (_authController.user != null) {
         final user = _authController.user!;

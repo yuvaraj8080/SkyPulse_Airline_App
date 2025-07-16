@@ -11,7 +11,7 @@ import '../../../widgets/loading_widget.dart';
 class SavedFlightsView extends StatelessWidget {
   final FlightController _flightController = Get.find<FlightController>();
 
-  SavedFlightsView({Key? key}) : super(key: key);
+  SavedFlightsView({super.key});
 
   @override
   Widget build(BuildContext context) {

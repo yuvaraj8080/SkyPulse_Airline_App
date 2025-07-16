@@ -13,7 +13,7 @@ import '../../../widgets/loading_widget.dart';
 class SubscriptionView extends StatelessWidget {
   final SubscriptionController _subscriptionController = Get.find<SubscriptionController>();
 
-  SubscriptionView({Key? key}) : super(key: key);
+  SubscriptionView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +195,7 @@ class SubscriptionView extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
-                  ...features.map((feature) => _buildFeatureItem(feature.toString())).toList(),
+                  ...features.map((feature) => _buildFeatureItem(feature.toString())),
                   const SizedBox(height: 24),
                   CustomButton(
                     text: isCurrentSubscription

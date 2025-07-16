@@ -57,10 +57,8 @@ class SupabaseProvider {
               .eq('id', response.user!.id)
               .single();
 
-          if (userData != null) {
-            return User.fromJson(userData);
-          }
-        } catch (e) {
+          return User.fromJson(userData);
+                } catch (e) {
           print('Error fetching user data from users table: $e');
           // If no record in users table, create one with data from auth
           final userMetadata = response.user!.userMetadata;
@@ -83,10 +81,8 @@ class SupabaseProvider {
               .eq('id', response.user!.id)
               .single();
 
-          if (newUserData != null) {
-            return User.fromJson(newUserData);
-          }
-        }
+          return User.fromJson(newUserData);
+                }
 
         // Fallback to auth data if users table fetch fails
         return User.fromSupabaseAuth(response.user!.toJson());
@@ -134,10 +130,8 @@ class SupabaseProvider {
           // Fetch the newly created user record
           final newUserData = await _client.from('users').select().eq('id', user.id).single();
 
-          if (newUserData != null) {
-            return User.fromJson(newUserData);
-          }
-        }
+          return User.fromJson(newUserData);
+                }
 
         // Fallback to auth data if users table fetch fails
         return User.fromSupabaseAuth(user.toJson());
@@ -167,10 +161,8 @@ class SupabaseProvider {
             .eq('id', userId)
             .single();
 
-        if (userData != null) {
-          return User.fromJson(userData);
-        }
-      } catch (e) {
+        return User.fromJson(userData);
+            } catch (e) {
         print('Error fetching user profile from database: $e');
 
         // If user doesn't exist in database, create a record
@@ -190,10 +182,8 @@ class SupabaseProvider {
 
         // Fetch newly created record
         final newUserData = await _client.from('users').select().eq('id', userId).single();
-        if (newUserData != null) {
-          return User.fromJson(newUserData);
-        }
-      }
+        return User.fromJson(newUserData);
+            }
 
       // If all else fails, return a basic user object from auth data
       return User.fromSupabaseAuth(currentAuthUser.toJson());
@@ -240,10 +230,8 @@ class SupabaseProvider {
       // Fetch updated user data
       final userData = await _client.from('users').select().eq('id', userId).single();
 
-      if (userData != null) {
-        return User.fromJson(userData);
-      }
-      return null;
+      return User.fromJson(userData);
+          return null;
     } catch (e) {
       print('Error updating user profile: $e');
       rethrow;
@@ -255,26 +243,24 @@ class SupabaseProvider {
     try {
       final data = await _client.from('saved_flights').select('*').eq('user_id', userId);
 
-      if (data != null) {
-        return (data as List).map((flightJson) {
-          return Flight(
-            flightNumber: flightJson['flight_number'] ?? '',
-            airline: flightJson['airline'] ?? '',
-            airlineName: flightJson['airline_name'] ?? '',
-            departureAirport: flightJson['departure_airport'] ?? '',
-            arrivalAirport: flightJson['arrival_airport'] ?? '',
-            departureCity: flightJson['departure_city'] ?? '',
-            arrivalCity: flightJson['arrival_city'] ?? '',
-            scheduledDeparture:
-                flightJson['scheduled_departure'] != null ? DateTime.parse(flightJson['scheduled_departure']) : null,
-            scheduledArrival:
-                flightJson['scheduled_arrival'] != null ? DateTime.parse(flightJson['scheduled_arrival']) : null,
-            status: flightJson['status'] ?? 'Scheduled',
-            isFavorite: true,
-          );
-        }).toList();
-      }
-      return [];
+      return (data as List).map((flightJson) {
+        return Flight(
+          flightNumber: flightJson['flight_number'] ?? '',
+          airline: flightJson['airline'] ?? '',
+          airlineName: flightJson['airline_name'] ?? '',
+          departureAirport: flightJson['departure_airport'] ?? '',
+          arrivalAirport: flightJson['arrival_airport'] ?? '',
+          departureCity: flightJson['departure_city'] ?? '',
+          arrivalCity: flightJson['arrival_city'] ?? '',
+          scheduledDeparture:
+              flightJson['scheduled_departure'] != null ? DateTime.parse(flightJson['scheduled_departure']) : null,
+          scheduledArrival:
+              flightJson['scheduled_arrival'] != null ? DateTime.parse(flightJson['scheduled_arrival']) : null,
+          status: flightJson['status'] ?? 'Scheduled',
+          isFavorite: true,
+        );
+      }).toList();
+          return [];
     } catch (e) {
       print('Error getting saved flights from Supabase: $e');
 

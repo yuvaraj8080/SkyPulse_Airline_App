@@ -15,7 +15,7 @@ class SignupView extends StatelessWidget {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  SignupView({Key? key}) : super(key: key);
+  SignupView({super.key});
 
   @override
   Widget build(BuildContext context) {

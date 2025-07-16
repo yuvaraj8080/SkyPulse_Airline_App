@@ -10,19 +10,14 @@ class AuthController extends GetxController {
   final UserRepository _userRepository = UserRepository();
   final logger = Logger();
 
-  Rx<User?> _user = Rx<User?>(null);
-  RxBool _isLoading = false.obs;
-  RxBool _isAuthenticated = false.obs;
+  final Rx<User?> _user = Rx<User?>(null);
+  final RxBool _isLoading = false.obs;
+  final RxBool _isAuthenticated = false.obs;
 
   User? get user => _user.value;
   bool get isLoading => _isLoading.value;
   bool get isAuthenticated => _isAuthenticated.value;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // Authentication state will be checked in checkAuthStatus
-  }
 
   Future<void> checkAuthStatus() async {
     _isLoading.value = true;

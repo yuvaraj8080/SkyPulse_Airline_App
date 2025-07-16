@@ -15,7 +15,7 @@ import '../../../theme/app_text_styles.dart';
 import '../../../widgets/flight_card.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+  const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -84,7 +84,7 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class _HomeTab extends StatelessWidget {
-  const _HomeTab({Key? key}) : super(key: key);
+  const _HomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +211,7 @@ class _HomeTab extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${authController.user?.fullName ?? 'Traveler'}',
+                        authController.user?.fullName ?? 'Traveler',
                         style: AppTextStyles.headline5.copyWith(color: Colors.white),
                       ),
                     ],
