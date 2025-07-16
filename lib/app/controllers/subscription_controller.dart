@@ -8,33 +8,33 @@ import '../utils/helpers.dart';
 
 class SubscriptionController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
-  
+
   final RxBool _isLoading = false.obs;
   final RxList<purchases.Offering> _offerings = <purchases.Offering>[].obs;
   final Rx<SubscriptionType> _currentSubscription = SubscriptionType.free.obs;
   final Rx<DateTime?> _expiryDate = Rx<DateTime?>(null);
   final RxBool _isInitialized = false.obs;
-  
+
   bool get isLoading => _isLoading.value;
   List<purchases.Offering> get offerings => _offerings;
   SubscriptionType get currentSubscription => _currentSubscription.value;
   DateTime? get expiryDate => _expiryDate.value;
   bool get isInitialized => _isInitialized.value;
-  
+
   @override
   void onInit() {
     super.onInit();
     initPlatformState();
   }
-  
+
   // Initialize the RevenueCat SDK
   Future<void> initPlatformState() async {
     _isLoading.value = true;
-    
+
     try {
       // Configure RevenueCat with proper error handling
       await purchases.Purchases.setDebugLogsEnabled(true);
-      
+
       // Safely configure with fallback
       try {
         // Try to get API key from environment or constants
@@ -42,7 +42,8 @@ class SubscriptionController extends GetxController {
         if (apiKey.isNotEmpty && apiKey != 'YOUR_REVENUECAT_PUBLIC_SDK_KEY') {
           await purchases.Purchases.setup(apiKey);
         } else {
-          print('Warning: Using placeholder RevenueCat API key. Set a real key in Constants.');
+          print(
+              'Warning: Using placeholder RevenueCat API key. Set a real key in Constants.');
           // Still setup with placeholder to avoid crashes, but features will be limited
           await purchases.Purchases.setup('temporaryplaceholder');
         }
@@ -50,13 +51,13 @@ class SubscriptionController extends GetxController {
         print('RevenueCat setup error: $setupError');
         // Continue app flow without subscription features
       }
-      
+
       // Check if user is logged in - with additional error handling
       if (_authController.isAuthenticated && _authController.user != null) {
         try {
           // Identify the user to RevenueCat
           await purchases.Purchases.logIn(_authController.user!.id);
-          
+
           // Update subscription info
           await _updateSubscriptionStatus();
         } catch (userError) {
@@ -64,7 +65,7 @@ class SubscriptionController extends GetxController {
           // Continue with limited functionality
         }
       }
-      
+
       // Get available offerings with error handling
       try {
         await fetchOfferings();
@@ -72,7 +73,7 @@ class SubscriptionController extends GetxController {
         print('Error fetching offerings: $offeringsError');
         // Continue without offerings data
       }
-      
+
       _isInitialized.value = true;
     } catch (e) {
       print('Error initializing subscription controller: $e');
@@ -82,11 +83,11 @@ class SubscriptionController extends GetxController {
       _isLoading.value = false;
     }
   }
-  
+
   // Fetch available subscription offerings
   Future<void> fetchOfferings() async {
     _isLoading.value = true;
-    
+
     try {
       final offerings = await purchases.Purchases.getOfferings();
       if (offerings.current != null) {
@@ -101,7 +102,7 @@ class SubscriptionController extends GetxController {
       _isLoading.value = false;
     }
   }
-  
+
   // Purchase a subscription
   Future<void> purchasePackage(purchases.Package package) async {
     if (!_authController.isAuthenticated) {
@@ -109,16 +110,16 @@ class SubscriptionController extends GetxController {
       Get.toNamed('/login');
       return;
     }
-    
+
     _isLoading.value = true;
-    
+
     try {
       final purchaserInfo = await purchases.Purchases.purchasePackage(package);
       await _handlePurchaseInfo(purchaserInfo);
       showSuccessSnackBar(message: 'Subscription successful');
     } on purchases.PurchasesErrorCode catch (e) {
       print('Error purchasing package: $e');
-      
+
       if (e != purchases.PurchasesErrorCode.purchaseCancelledError) {
         showErrorSnackBar(message: 'Failed to complete purchase: ${e.name}');
       }
@@ -129,7 +130,7 @@ class SubscriptionController extends GetxController {
       _isLoading.value = false;
     }
   }
-  
+
   // Restore purchases
   Future<void> restorePurchases() async {
     if (!_authController.isAuthenticated) {
@@ -137,9 +138,9 @@ class SubscriptionController extends GetxController {
       Get.toNamed('/login');
       return;
     }
-    
+
     _isLoading.value = true;
-    
+
     try {
       final purchaserInfo = await purchases.Purchases.restorePurchases();
       await _handlePurchaseInfo(purchaserInfo);
@@ -151,19 +152,21 @@ class SubscriptionController extends GetxController {
       _isLoading.value = false;
     }
   }
-  
+
   // Handle purchaser info and update subscription status
   Future<void> _handlePurchaseInfo(purchases.CustomerInfo purchaserInfo) async {
     final entitlements = purchaserInfo.entitlements.active;
-    
+
     if (entitlements.containsKey('pro')) {
       _currentSubscription.value = SubscriptionType.pro;
-      
+
       // Parse expiration date from String to DateTime if it exists
-      final expirationDateStr = purchaserInfo.entitlements.active['pro']?.expirationDate;
-      _expiryDate.value = expirationDateStr != null ? 
-        DateTime.tryParse(expirationDateStr) : null;
-      
+      final expirationDateStr =
+          purchaserInfo.entitlements.active['pro']?.expirationDate;
+      _expiryDate.value = expirationDateStr != null
+          ? DateTime.tryParse(expirationDateStr)
+          : null;
+
       if (_authController.isAuthenticated) {
         await _authController.updateSubscription(
           SubscriptionType.pro,
@@ -174,12 +177,14 @@ class SubscriptionController extends GetxController {
       }
     } else if (entitlements.containsKey('premium')) {
       _currentSubscription.value = SubscriptionType.premium;
-      
+
       // Parse expiration date from String to DateTime if it exists
-      final expirationDateStr = purchaserInfo.entitlements.active['premium']?.expirationDate;
-      _expiryDate.value = expirationDateStr != null ? 
-        DateTime.tryParse(expirationDateStr) : null;
-      
+      final expirationDateStr =
+          purchaserInfo.entitlements.active['premium']?.expirationDate;
+      _expiryDate.value = expirationDateStr != null
+          ? DateTime.tryParse(expirationDateStr)
+          : null;
+
       if (_authController.isAuthenticated) {
         await _authController.updateSubscription(
           SubscriptionType.premium,
@@ -191,7 +196,7 @@ class SubscriptionController extends GetxController {
     } else {
       _currentSubscription.value = SubscriptionType.free;
       _expiryDate.value = null;
-      
+
       if (_authController.isAuthenticated) {
         await _authController.updateSubscription(
           SubscriptionType.free,
@@ -200,15 +205,16 @@ class SubscriptionController extends GetxController {
       }
     }
   }
-  
+
   // Update subscription status from backend
   Future<void> _updateSubscriptionStatus() async {
     if (!_authController.isAuthenticated) return;
-    
+
     try {
       // Check if RevenueCat is properly initialized
       if (!_isInitialized.value) {
-        print('Warning: Attempting to get purchaser info when RevenueCat is not initialized');
+        print(
+            'Warning: Attempting to get purchaser info when RevenueCat is not initialized');
         // Use user data from Supabase as fallback
         if (_authController.user != null) {
           final user = _authController.user!;
@@ -217,24 +223,26 @@ class SubscriptionController extends GetxController {
         }
         return;
       }
-      
+
       // Safely get purchaser info with timeout protection
       purchases.CustomerInfo? purchaserInfo;
       try {
         purchaserInfo = await purchases.Purchases.getCustomerInfo()
-          .timeout(const Duration(seconds: 5), onTimeout: () {
-            print('Timeout getting purchaser info');
-            throw TimeoutException('RevenueCat request timed out');
-          });
+            .timeout(const Duration(seconds: 5), onTimeout: () {
+          print('Timeout getting purchaser info');
+          throw TimeoutException('RevenueCat request timed out');
+        });
       } catch (purchaserError) {
         print('Error getting purchaser info: $purchaserError');
         // Continue with app flow without RevenueCat data
         return;
       }
-      
-      // Update from RevenueCat info
-      await _handlePurchaseInfo(purchaserInfo);
-          
+
+      if (purchaserInfo != null) {
+        // Update from RevenueCat info
+        await _handlePurchaseInfo(purchaserInfo);
+      }
+
       // Sync with user info from Supabase (use as fallback or to overwrite)
       if (_authController.user != null) {
         final user = _authController.user!;
@@ -245,16 +253,17 @@ class SubscriptionController extends GetxController {
       print('Error updating subscription status: $e');
     }
   }
-  
+
   // Get subscription features
   List<String> getSubscriptionFeatures(SubscriptionType type) {
     final subscriptionKey = type.toString().split('.').last;
     if (Constants.subscriptionPlans.containsKey(subscriptionKey)) {
-      return List<String>.from(Constants.subscriptionPlans[subscriptionKey]['features']);
+      return List<String>.from(
+          Constants.subscriptionPlans[subscriptionKey]['features']);
     }
     return [];
   }
-  
+
   // Get subscription price
   String getSubscriptionPrice(SubscriptionType type) {
     final subscriptionKey = type.toString().split('.').last;
@@ -264,17 +273,18 @@ class SubscriptionController extends GetxController {
     }
     return 'N/A';
   }
-  
+
   // Check if feature is available for current subscription
   bool hasFeature(String featureName) {
     final features = getSubscriptionFeatures(_currentSubscription.value);
-    return features.any((f) => f.toLowerCase().contains(featureName.toLowerCase()));
+    return features
+        .any((f) => f.toLowerCase().contains(featureName.toLowerCase()));
   }
-  
+
   // Check if subscription is active
   bool get isSubscriptionActive {
-    return _currentSubscription.value != SubscriptionType.free && 
-           (_expiryDate.value == null || 
+    return _currentSubscription.value != SubscriptionType.free &&
+        (_expiryDate.value == null ||
             DateTime.now().isBefore(_expiryDate.value!));
   }
 }

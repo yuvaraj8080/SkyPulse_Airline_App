@@ -73,9 +73,12 @@ class Flight extends Equatable {
   String getDelayStatusText() {
     if (isCancelled) return 'Cancelled';
     if (isDiverted) return 'Diverted';
-    if (departureDelayMinutes > 120 || arrivalDelayMinutes > 120) return 'Severely Delayed';
-    if (departureDelayMinutes > 60 || arrivalDelayMinutes > 60) return 'Very Delayed';
-    if (departureDelayMinutes > 15 || arrivalDelayMinutes > 15) return 'Delayed';
+    if (departureDelayMinutes > 120 || arrivalDelayMinutes > 120)
+      return 'Severely Delayed';
+    if (departureDelayMinutes > 60 || arrivalDelayMinutes > 60)
+      return 'Very Delayed';
+    if (departureDelayMinutes > 15 || arrivalDelayMinutes > 15)
+      return 'Delayed';
     return 'On Time';
   }
 
@@ -178,8 +181,12 @@ class Flight extends Equatable {
       airlineName: airline['name'] ?? '',
       departureAirport: departure['airport']?['iata'] ?? '',
       arrivalAirport: arrival['airport']?['iata'] ?? '',
-      departureCity: departure['airport']?['municipalityName'] ?? departure['airport']?['name'] ?? '',
-      arrivalCity: arrival['airport']?['municipalityName'] ?? arrival['airport']?['name'] ?? '',
+      departureCity: departure['airport']?['municipalityName'] ??
+          departure['airport']?['name'] ??
+          '',
+      arrivalCity: arrival['airport']?['municipalityName'] ??
+          arrival['airport']?['name'] ??
+          '',
       scheduledDeparture: parseDateTime(departure['scheduledTime']),
       scheduledArrival: parseDateTime(arrival['scheduledTime']),
       actualDeparture: parseDateTime(departure['actualTime']),
@@ -220,7 +227,8 @@ class Flight extends Equatable {
       'aircraftRegistration': aircraftRegistration,
       'aircraftType': aircraftType,
       'onTimePercentage': onTimePercentage,
-      'alternativeRoutes': alternativeRoutes.map((route) => route.toJson()).toList(),
+      'alternativeRoutes':
+          alternativeRoutes.map((route) => route.toJson()).toList(),
       'delayHistory': delayHistory.map((delay) => delay.toJson()).toList(),
       'isFavorite': isFavorite,
       'terminal': terminal,
@@ -229,6 +237,55 @@ class Flight extends Equatable {
       'flightDuration': flightDuration,
       'flightServices': flightServices,
     };
+  }
+
+  // Factory method to create Flight from JSON
+  factory Flight.fromJson(Map<String, dynamic> json) {
+    return Flight(
+      flightNumber: json['flightNumber'] ?? '',
+      airline: json['airline'] ?? '',
+      airlineName: json['airlineName'] ?? '',
+      departureAirport: json['departureAirport'] ?? '',
+      arrivalAirport: json['arrivalAirport'] ?? '',
+      departureCity: json['departureCity'] ?? '',
+      arrivalCity: json['arrivalCity'] ?? '',
+      scheduledDeparture: json['scheduledDeparture'] != null
+          ? DateTime.parse(json['scheduledDeparture'])
+          : null,
+      scheduledArrival: json['scheduledArrival'] != null
+          ? DateTime.parse(json['scheduledArrival'])
+          : null,
+      actualDeparture: json['actualDeparture'] != null
+          ? DateTime.parse(json['actualDeparture'])
+          : null,
+      actualArrival: json['actualArrival'] != null
+          ? DateTime.parse(json['actualArrival'])
+          : null,
+      status: json['status'] ?? 'Unknown',
+      departureDelayMinutes: json['departureDelayMinutes'] ?? 0,
+      arrivalDelayMinutes: json['arrivalDelayMinutes'] ?? 0,
+      isCancelled: json['isCancelled'] ?? false,
+      isDiverted: json['isDiverted'] ?? false,
+      aircraftRegistration: json['aircraftRegistration'] ?? '',
+      aircraftType: json['aircraftType'] ?? '',
+      onTimePercentage: json['onTimePercentage']?.toDouble(),
+      alternativeRoutes: (json['alternativeRoutes'] as List<dynamic>?)
+              ?.map((route) => FlightRoute.fromJson(route))
+              .toList() ??
+          [],
+      delayHistory: (json['delayHistory'] as List<dynamic>?)
+              ?.map((delay) => FlightDelay.fromJson(delay))
+              .toList() ??
+          [],
+      isFavorite: json['isFavorite'] ?? false,
+      terminal: json['terminal'],
+      gate: json['gate'],
+      distance: json['distance']?.toDouble(),
+      flightDuration: json['flightDuration'],
+      flightServices: (json['flightServices'] as List<dynamic>?)
+          ?.map((service) => service.toString())
+          .toList(),
+    );
   }
 
   // Create a copy of Flight with some fields changed
@@ -274,7 +331,8 @@ class Flight extends Equatable {
       actualDeparture: actualDeparture ?? this.actualDeparture,
       actualArrival: actualArrival ?? this.actualArrival,
       status: status ?? this.status,
-      departureDelayMinutes: departureDelayMinutes ?? this.departureDelayMinutes,
+      departureDelayMinutes:
+          departureDelayMinutes ?? this.departureDelayMinutes,
       arrivalDelayMinutes: arrivalDelayMinutes ?? this.arrivalDelayMinutes,
       isCancelled: isCancelled ?? this.isCancelled,
       isDiverted: isDiverted ?? this.isDiverted,

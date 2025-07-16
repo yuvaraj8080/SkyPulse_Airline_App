@@ -112,17 +112,20 @@ class FlightApiProvider {
           final firstItem = data[0];
           print(
               'greatCircleDistance: ${firstItem['greatCircleDistance']} (type: ${firstItem['greatCircleDistance']?.runtimeType})');
-          print('flightTime: ${firstItem['flightTime']} (type: ${firstItem['flightTime']?.runtimeType})');
+          print(
+              'flightTime: ${firstItem['flightTime']} (type: ${firstItem['flightTime']?.runtimeType})');
         } else if (data is Map<String, dynamic>) {
           print(
               'greatCircleDistance: ${data['greatCircleDistance']} (type: ${data['greatCircleDistance']?.runtimeType})');
-          print('flightTime: ${data['flightTime']} (type: ${data['flightTime']?.runtimeType})');
+          print(
+              'flightTime: ${data['flightTime']} (type: ${data['flightTime']?.runtimeType})');
         }
 
         if (data is List && data.isNotEmpty) {
           // Response is an array with flight data - take first match
           try {
-            return Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(data[0]));
+            return Flight.fromAeroDataBoxApi(
+                Map<String, dynamic>.from(data[0]));
           } catch (e) {
             Get.log('Error parsing flight data: $e', isError: true);
             return null;
@@ -140,7 +143,8 @@ class FlightApiProvider {
           return null;
         }
       } else {
-        Get.log('API request failed with status: ${response.statusCode}', isError: true);
+        Get.log('API request failed with status: ${response.statusCode}',
+            isError: true);
         return null;
       }
     } on dio.DioException catch (e) {
@@ -153,7 +157,8 @@ class FlightApiProvider {
         final number = parts['number'];
         final today = _formatTodayDate();
 
-        print('Retrying with specific date: Airline=$airlineIata, Number=$number, Date=$today');
+        print(
+            'Retrying with specific date: Airline=$airlineIata, Number=$number, Date=$today');
 
         final response = await _dio.get(
           '/flights/number/$airlineIata$number',
@@ -179,23 +184,27 @@ class FlightApiProvider {
           } else if (data is Map<String, dynamic>) {
             print(
                 'Second attempt - greatCircleDistance: ${data['greatCircleDistance']} (type: ${data['greatCircleDistance']?.runtimeType})');
-            print('Second attempt - flightTime: ${data['flightTime']} (type: ${data['flightTime']?.runtimeType})');
+            print(
+                'Second attempt - flightTime: ${data['flightTime']} (type: ${data['flightTime']?.runtimeType})');
           }
 
           if (data is List && data.isNotEmpty) {
-            return Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(data[0]));
+            return Flight.fromAeroDataBoxApi(
+                Map<String, dynamic>.from(data[0]));
           } else if (data is Map<String, dynamic>) {
             return Flight.fromAeroDataBoxApi(data);
           }
         }
       } catch (secondAttemptError) {
-        Get.log('Second attempt also failed: $secondAttemptError', isError: true);
+        Get.log('Second attempt also failed: $secondAttemptError',
+            isError: true);
       }
 
       _handleError(e, 'getFlightByNumber');
       return null;
     } catch (e, stackTrace) {
-      Get.log('Unexpected error in getFlightByNumber: $e\n$stackTrace', isError: true);
+      Get.log('Unexpected error in getFlightByNumber: $e\n$stackTrace',
+          isError: true);
       return null;
     }
   }
@@ -233,7 +242,8 @@ class FlightApiProvider {
           // Process list of flights
           for (var flightData in response.data) {
             try {
-              flights.add(Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(flightData)));
+              flights.add(Flight.fromAeroDataBoxApi(
+                  Map<String, dynamic>.from(flightData)));
             } catch (e) {
               Get.log('Error parsing flight data: $e', isError: true);
             }
@@ -242,7 +252,8 @@ class FlightApiProvider {
           // Process structured response with legs
           for (var legData in response.data['legs']) {
             try {
-              flights.add(Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(legData)));
+              flights.add(Flight.fromAeroDataBoxApi(
+                  Map<String, dynamic>.from(legData)));
             } catch (e) {
               Get.log('Error parsing leg data: $e', isError: true);
             }
@@ -251,13 +262,15 @@ class FlightApiProvider {
 
         return flights;
       }
-      Get.log('API returned status code: ${response.statusCode}', isError: true);
+      Get.log('API returned status code: ${response.statusCode}',
+          isError: true);
       return [];
     } on dio.DioException catch (e) {
       _handleError(e, 'searchFlights');
       return [];
     } catch (e, stackTrace) {
-      Get.log('Unexpected error in searchFlights: $e\n$stackTrace', isError: true);
+      Get.log('Unexpected error in searchFlights: $e\n$stackTrace',
+          isError: true);
       return [];
     }
   }
@@ -278,7 +291,8 @@ class FlightApiProvider {
   }
 
   // Get airport flight schedules
-  Future<Map<String, List<Flight>>> getAirportSchedule(String airportCode, String date) async {
+  Future<Map<String, List<Flight>>> getAirportSchedule(
+      String airportCode, String date) async {
     try {
       final response = await _dio.get(
         '/flights/airports/iata/$airportCode/$date',
@@ -293,14 +307,19 @@ class FlightApiProvider {
 
       print('Airport Schedule Response: ${response.data}');
 
-      final Map<String, List<Flight>> result = {'arrivals': [], 'departures': []};
+      final Map<String, List<Flight>> result = {
+        'arrivals': [],
+        'departures': []
+      };
 
       if (response.statusCode == 200) {
         // Process arrivals if available
-        if (response.data['arrivals'] != null && response.data['arrivals'] is List) {
+        if (response.data['arrivals'] != null &&
+            response.data['arrivals'] is List) {
           for (var flightData in response.data['arrivals']) {
             try {
-              result['arrivals']!.add(Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(flightData)));
+              result['arrivals']!.add(Flight.fromAeroDataBoxApi(
+                  Map<String, dynamic>.from(flightData)));
             } catch (e) {
               Get.log('Error parsing arrival flight: $e', isError: true);
             }
@@ -308,17 +327,21 @@ class FlightApiProvider {
         }
 
         // Process departures if available
-        if (response.data['departures'] != null && response.data['departures'] is List) {
+        if (response.data['departures'] != null &&
+            response.data['departures'] is List) {
           for (var flightData in response.data['departures']) {
             try {
-              result['departures']!.add(Flight.fromAeroDataBoxApi(Map<String, dynamic>.from(flightData)));
+              result['departures']!.add(Flight.fromAeroDataBoxApi(
+                  Map<String, dynamic>.from(flightData)));
             } catch (e) {
               Get.log('Error parsing departure flight: $e', isError: true);
             }
           }
         }
       } else {
-        Get.log('Airport schedule API request failed with status: ${response.statusCode}', isError: true);
+        Get.log(
+            'Airport schedule API request failed with status: ${response.statusCode}',
+            isError: true);
       }
 
       return result;
@@ -326,7 +349,8 @@ class FlightApiProvider {
       _handleError(e, 'getAirportSchedule');
       return {'arrivals': [], 'departures': []};
     } catch (e, stackTrace) {
-      Get.log('Unexpected error in getAirportSchedule: $e\n$stackTrace', isError: true);
+      Get.log('Unexpected error in getAirportSchedule: $e\n$stackTrace',
+          isError: true);
       return {'arrivals': [], 'departures': []};
     }
   }
@@ -347,7 +371,8 @@ class FlightApiProvider {
   }
 
   // Get flight status and tracking
-  Future<Map<String, dynamic>?> getFlightStatus(String flightNumber, String date) async {
+  Future<Map<String, dynamic>?> getFlightStatus(
+      String flightNumber, String date) async {
     try {
       // Parse airline code and flight number
       final parts = _parseFlightNumber(flightNumber);
@@ -380,20 +405,24 @@ class FlightApiProvider {
           return null;
         }
       } else {
-        Get.log('Flight status API request failed with status: ${response.statusCode}', isError: true);
+        Get.log(
+            'Flight status API request failed with status: ${response.statusCode}',
+            isError: true);
         return null;
       }
     } on dio.DioException catch (e) {
       _handleError(e, 'getFlightStatus');
       return null;
     } catch (e, stackTrace) {
-      Get.log('Unexpected error in getFlightStatus: $e\n$stackTrace', isError: true);
+      Get.log('Unexpected error in getFlightStatus: $e\n$stackTrace',
+          isError: true);
       return null;
     }
   }
 
   // Get aircraft information
-  Future<Map<String, dynamic>?> getAircraftInfo(String registrationNumber) async {
+  Future<Map<String, dynamic>?> getAircraftInfo(
+      String registrationNumber) async {
     try {
       final response = await _dio.get('/aircrafts/reg/$registrationNumber');
 
@@ -426,7 +455,10 @@ class FlightApiProvider {
     }
 
     // Default fallback - take first 2 chars as airline code
-    return {'airline': flightNumber.substring(0, 2), 'number': flightNumber.substring(2)};
+    return {
+      'airline': flightNumber.substring(0, 2),
+      'number': flightNumber.substring(2)
+    };
   }
 
   String _formatTodayDate() {
@@ -444,7 +476,8 @@ class FlightApiProvider {
       'responseData': e.response?.data,
     };
 
-    if (e.type == dio.DioExceptionType.connectionTimeout || e.type == dio.DioExceptionType.receiveTimeout) {
+    if (e.type == dio.DioExceptionType.connectionTimeout ||
+        e.type == dio.DioExceptionType.receiveTimeout) {
       Get.log('Timeout in $methodName: ${e.message}', isError: true);
     } else if (e.type == dio.DioExceptionType.badResponse) {
       Get.log(
@@ -462,7 +495,7 @@ class FlightApiProvider {
     for (var i = 0; i < maxRetries; i++) {
       try {
         return await request();
-      } on dio.DioException {
+      } on dio.DioException catch (e) {
         if (i == maxRetries - 1) rethrow;
         await Future.delayed(delay);
       }
@@ -471,7 +504,8 @@ class FlightApiProvider {
   }
 
   // Generate mock flight data for testing when the API fails
-  Map<String, dynamic> _getMockFlightData(String airlineCode, String flightNumber) {
+  Map<String, dynamic> _getMockFlightData(
+      String airlineCode, String flightNumber) {
     final now = DateTime.now();
     final departure = now.add(Duration(hours: 2));
     final arrival = now.add(Duration(hours: 5));
@@ -479,17 +513,21 @@ class FlightApiProvider {
     // Create more realistic mock data based on AeroDataBox API format
     return {
       "number": "$airlineCode$flightNumber",
-      "callSign": "$airlineCode$flightNumber",
+      "callSign": "${airlineCode}${flightNumber}",
       "status": "EnRoute",
       "codeshareStatus": "IsOperator",
       "isCargo": false,
       "aircraft": {
-        "reg": "N${Random().nextInt(999)}$airlineCode",
+        "reg": "N${Random().nextInt(999)}${airlineCode}",
         "modeS": "A${Random().nextInt(9999)}",
         "model": _getAircraftModel(airlineCode),
         "image": null
       },
-      "airline": {"name": _getAirlineName(airlineCode), "iata": airlineCode, "icao": _getAirlineIcao(airlineCode)},
+      "airline": {
+        "name": _getAirlineName(airlineCode),
+        "iata": airlineCode,
+        "icao": _getAirlineIcao(airlineCode)
+      },
       "departure": {
         "airport": {
           "name": "San Francisco International Airport",
@@ -498,7 +536,10 @@ class FlightApiProvider {
           "municipalityName": "San Francisco",
           "location": {"lat": 37.619, "lon": -122.375}
         },
-        "scheduledTime": {"utc": departure.toIso8601String(), "local": departure.toIso8601String()},
+        "scheduledTime": {
+          "utc": departure.toIso8601String(),
+          "local": departure.toIso8601String()
+        },
         "actualTime": {
           "utc": departure.add(Duration(minutes: 10)).toIso8601String(),
           "local": departure.add(Duration(minutes: 10)).toIso8601String()
@@ -516,7 +557,10 @@ class FlightApiProvider {
           "municipalityName": "New York",
           "location": {"lat": 40.64, "lon": -73.779}
         },
-        "scheduledTime": {"utc": arrival.toIso8601String(), "local": arrival.toIso8601String()},
+        "scheduledTime": {
+          "utc": arrival.toIso8601String(),
+          "local": arrival.toIso8601String()
+        },
         "actualTime": {
           "utc": arrival.add(Duration(minutes: 5)).toIso8601String(),
           "local": arrival.add(Duration(minutes: 5)).toIso8601String()
@@ -526,7 +570,13 @@ class FlightApiProvider {
         "quality": ["Basic", "Live"],
         "delay": 5
       },
-      "greatCircleDistance": {"meter": 4152000, "km": 4152.0, "mile": 2580.0, "nm": 2241.0, "feet": 13620000.0},
+      "greatCircleDistance": {
+        "meter": 4152000,
+        "km": 4152.0,
+        "mile": 2580.0,
+        "nm": 2241.0,
+        "feet": 13620000.0
+      },
       "flightTime": 320
     };
   }

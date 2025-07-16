@@ -36,19 +36,18 @@ Future<void> _initializeApp() async {
     // 2. Initialize storage solutions
     await _initializeStorage();
 
-    // 4. Initialize Supabase with proper session persistence
-    await Supabase.initialize(
-      url: Constants.supabaseUrl,
-      anonKey: Constants.supabaseAnonKey,
-      debug: true,
-    );
-
     // 3. Set device orientation
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
 
+    // 4. Initialize Supabase with proper session persistence
+    await Supabase.initialize(
+      url: Constants.supabaseUrl,
+      anonKey: Constants.supabaseAnonKey,
+      debug: true,
+    );
 
     // 5. Initialize other dependencies
     await _initializeDependencies();
@@ -78,7 +77,8 @@ Future<void> _initializeDependencies() async {
   final userRepository = UserRepository();
 
   // Initialize Controllers with dependencies
-  final authController = Get.put<AuthController>(AuthController(), permanent: true);
+  final authController =
+      Get.put<AuthController>(AuthController(), permanent: true);
 
   // Wait for auth check to complete before proceeding
   await authController.checkAuthStatus();
@@ -101,7 +101,7 @@ class FlightTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'SkyPulse',
+      title: 'SkyLine',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

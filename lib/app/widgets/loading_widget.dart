@@ -8,10 +8,10 @@ class LoadingWidget extends StatelessWidget {
   final bool isFullScreen;
 
   const LoadingWidget({
-    super.key,
+    Key? key,
     this.message,
     this.isFullScreen = false,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,11 +62,11 @@ class LoadingShimmer extends StatelessWidget {
   final double borderRadius;
 
   const LoadingShimmer({
-    super.key,
+    Key? key,
     this.width = double.infinity,
     this.height = 16,
     this.borderRadius = 8,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +84,7 @@ class LoadingShimmer extends StatelessWidget {
 }
 
 class LoadingFlightCard extends StatelessWidget {
-  const LoadingFlightCard({super.key});
+  const LoadingFlightCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -13,7 +13,7 @@ import '../../../widgets/flight_card.dart';
 import '../../../widgets/loading_widget.dart';
 
 class FlightSearchView extends StatefulWidget {
-  const FlightSearchView({super.key});
+  const FlightSearchView({Key? key}) : super(key: key);
 
   @override
   State<FlightSearchView> createState() => _FlightSearchViewState();

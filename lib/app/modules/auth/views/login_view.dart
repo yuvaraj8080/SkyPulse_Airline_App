@@ -8,12 +8,12 @@ import '../../../widgets/custom_button.dart';
 import '../../../widgets/loading_widget.dart';
 
 class LoginView extends StatelessWidget {
-  final AuthController _authController = Get.put(AuthController());
+  final AuthController _authController = Get.find<AuthController>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  LoginView({super.key});
+  LoginView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +67,9 @@ class LoginView extends StatelessWidget {
         Text(
           'Log in to track your flights and get real-time updates',
           style: AppTextStyles.subtitle1.copyWith(
-            color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            color: Get.isDarkMode
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
           ),
         ),
       ],

@@ -17,12 +17,12 @@ class FlightCard extends StatefulWidget {
   final bool isDetailed;
 
   const FlightCard({
-    super.key,
+    Key? key,
     required this.flight,
     required this.onTap,
     this.showFavoriteIcon = false,
     this.isDetailed = false,
-  });
+  }) : super(key: key);
 
   @override
   State<FlightCard> createState() => _FlightCardState();
@@ -240,7 +240,7 @@ class _FlightCardState extends State<FlightCard> {
             Expanded(
               child: Column(
                 children: [
-                  SizedBox(
+                  Container(
                     height: 40,
                     child: Stack(
                       alignment: Alignment.center,
@@ -390,7 +390,7 @@ class _FlightCardState extends State<FlightCard> {
           ),
         ),
         const SizedBox(height: 8),
-        SizedBox(
+        Container(
           height: 24,
           child: Stack(
             children: [

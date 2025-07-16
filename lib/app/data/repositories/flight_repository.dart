@@ -72,7 +72,8 @@ class FlightRepository {
     String? arrivalAirport,
     String? date,
   }) async {
-    final cacheKey = 'search_${departureAirport ?? ""}_${arrivalAirport ?? ""}_${date ?? ""}';
+    final cacheKey =
+        'search_${departureAirport ?? ""}_${arrivalAirport ?? ""}_${date ?? ""}';
 
     try {
       // Check if we have cached results that are not too old (30 minutes)
@@ -93,12 +94,18 @@ class FlightRepository {
                       arrivalAirport: json['arrivalAirport'] ?? '',
                       departureCity: json['departureCity'] ?? '',
                       arrivalCity: json['arrivalCity'] ?? '',
-                      scheduledDeparture:
-                          json['scheduledDeparture'] != null ? DateTime.parse(json['scheduledDeparture']) : null,
-                      scheduledArrival:
-                          json['scheduledArrival'] != null ? DateTime.parse(json['scheduledArrival']) : null,
-                      actualDeparture: json['actualDeparture'] != null ? DateTime.parse(json['actualDeparture']) : null,
-                      actualArrival: json['actualArrival'] != null ? DateTime.parse(json['actualArrival']) : null,
+                      scheduledDeparture: json['scheduledDeparture'] != null
+                          ? DateTime.parse(json['scheduledDeparture'])
+                          : null,
+                      scheduledArrival: json['scheduledArrival'] != null
+                          ? DateTime.parse(json['scheduledArrival'])
+                          : null,
+                      actualDeparture: json['actualDeparture'] != null
+                          ? DateTime.parse(json['actualDeparture'])
+                          : null,
+                      actualArrival: json['actualArrival'] != null
+                          ? DateTime.parse(json['actualArrival'])
+                          : null,
                       status: json['status'] ?? 'Unknown',
                       departureDelayMinutes: json['departureDelayMinutes'] ?? 0,
                       arrivalDelayMinutes: json['arrivalDelayMinutes'] ?? 0,
@@ -107,14 +114,17 @@ class FlightRepository {
                       aircraftRegistration: json['aircraftRegistration'] ?? '',
                       aircraftType: json['aircraftType'] ?? '',
                       onTimePercentage: json['onTimePercentage']?.toDouble(),
-                      alternativeRoutes: _parseAlternativeRoutes(json['alternativeRoutes']),
+                      alternativeRoutes:
+                          _parseAlternativeRoutes(json['alternativeRoutes']),
                       delayHistory: _parseDelayHistory(json['delayHistory']),
                       isFavorite: json['isFavorite'] ?? false,
                       terminal: json['terminal'],
                       gate: json['gate'],
                       distance: json['distance']?.toDouble(),
                       flightDuration: json['flightDuration'],
-                      flightServices: json['flightServices'] != null ? List<String>.from(json['flightServices']) : null,
+                      flightServices: json['flightServices'] != null
+                          ? List<String>.from(json['flightServices'])
+                          : null,
                     ))
                 .toList();
             return flights;
@@ -140,8 +150,10 @@ class FlightRepository {
           .toList();
 
       // Cache the results
-      await _flightBox.put(cacheKey, jsonEncode(enhancedFlights.map((f) => f.toJson()).toList()));
-      await _flightBox.put('${cacheKey}_timestamp', DateTime.now().toIso8601String());
+      await _flightBox.put(cacheKey,
+          jsonEncode(enhancedFlights.map((f) => f.toJson()).toList()));
+      await _flightBox.put(
+          '${cacheKey}_timestamp', DateTime.now().toIso8601String());
 
       return enhancedFlights;
     } catch (e) {
@@ -160,12 +172,18 @@ class FlightRepository {
                     arrivalAirport: json['arrivalAirport'] ?? '',
                     departureCity: json['departureCity'] ?? '',
                     arrivalCity: json['arrivalCity'] ?? '',
-                    scheduledDeparture:
-                        json['scheduledDeparture'] != null ? DateTime.parse(json['scheduledDeparture']) : null,
-                    scheduledArrival:
-                        json['scheduledArrival'] != null ? DateTime.parse(json['scheduledArrival']) : null,
-                    actualDeparture: json['actualDeparture'] != null ? DateTime.parse(json['actualDeparture']) : null,
-                    actualArrival: json['actualArrival'] != null ? DateTime.parse(json['actualArrival']) : null,
+                    scheduledDeparture: json['scheduledDeparture'] != null
+                        ? DateTime.parse(json['scheduledDeparture'])
+                        : null,
+                    scheduledArrival: json['scheduledArrival'] != null
+                        ? DateTime.parse(json['scheduledArrival'])
+                        : null,
+                    actualDeparture: json['actualDeparture'] != null
+                        ? DateTime.parse(json['actualDeparture'])
+                        : null,
+                    actualArrival: json['actualArrival'] != null
+                        ? DateTime.parse(json['actualArrival'])
+                        : null,
                     status: json['status'] ?? 'Unknown',
                     departureDelayMinutes: json['departureDelayMinutes'] ?? 0,
                     arrivalDelayMinutes: json['arrivalDelayMinutes'] ?? 0,
@@ -174,14 +192,17 @@ class FlightRepository {
                     aircraftRegistration: json['aircraftRegistration'] ?? '',
                     aircraftType: json['aircraftType'] ?? '',
                     onTimePercentage: json['onTimePercentage']?.toDouble(),
-                    alternativeRoutes: _parseAlternativeRoutes(json['alternativeRoutes']),
+                    alternativeRoutes:
+                        _parseAlternativeRoutes(json['alternativeRoutes']),
                     delayHistory: _parseDelayHistory(json['delayHistory']),
                     isFavorite: json['isFavorite'] ?? false,
                     terminal: json['terminal'],
                     gate: json['gate'],
                     distance: json['distance']?.toDouble(),
                     flightDuration: json['flightDuration'],
-                    flightServices: json['flightServices'] != null ? List<String>.from(json['flightServices']) : null,
+                    flightServices: json['flightServices'] != null
+                        ? List<String>.from(json['flightServices'])
+                        : null,
                   ))
               .toList();
         } catch (e) {
@@ -194,7 +215,8 @@ class FlightRepository {
   }
 
   // Get flight history with a mix of real data and mockups when needed
-  Future<List<Flight>> getFlightHistory(String flightNumber, {int days = 7}) async {
+  Future<List<Flight>> getFlightHistory(String flightNumber,
+      {int days = 7}) async {
     final cacheKey = 'history_$flightNumber';
 
     // First check if we have real cached data for this flight
@@ -202,7 +224,8 @@ class FlightRepository {
 
     // Search through cached flight statuses for this flight number
     final keys = _flightBox.keys.where((key) =>
-        key.toString().startsWith('status_$flightNumber') || key.toString().startsWith('flight_$flightNumber'));
+        key.toString().startsWith('status_$flightNumber') ||
+        key.toString().startsWith('flight_$flightNumber'));
 
     for (final key in keys) {
       try {
@@ -220,7 +243,8 @@ class FlightRepository {
     }
 
     // Sort real flights by departure time
-    realFlights.sort((a, b) => (a.actualDeparture ?? DateTime.now()).compareTo(b.actualDeparture ?? DateTime.now()));
+    realFlights.sort((a, b) => (a.actualDeparture ?? DateTime.now())
+        .compareTo(b.actualDeparture ?? DateTime.now()));
 
     // If we have enough real flights, use them
     if (realFlights.length >= days) {
@@ -234,36 +258,46 @@ class FlightRepository {
     if (currentFlight != null) {
       final mockNeeded = days - history.length;
       for (int i = 1; i <= mockNeeded; i++) {
-        final pastDate = DateTime.now().subtract(Duration(days: i + history.length));
+        final pastDate =
+            DateTime.now().subtract(Duration(days: i + history.length));
 
         // Generate status and delay
         final status = _generateRealisticStatus(i);
         final delayMinutes = _generateRealisticDelay(i);
 
         // Create historic flight entry
-        final adjustedDeparture = _adjustTimeToMatchDayOfWeek(currentFlight.scheduledDeparture, pastDate);
-        final adjustedArrival = _adjustTimeToMatchDayOfWeek(currentFlight.scheduledArrival, pastDate);
+        final adjustedDeparture = _adjustTimeToMatchDayOfWeek(
+            currentFlight.scheduledDeparture, pastDate);
+        final adjustedArrival = _adjustTimeToMatchDayOfWeek(
+            currentFlight.scheduledArrival, pastDate);
 
         history.add(currentFlight.copyWith(
           scheduledDeparture: adjustedDeparture,
           scheduledArrival: adjustedArrival,
-          actualDeparture: status != 'Cancelled' ? adjustedDeparture?.add(Duration(minutes: delayMinutes)) : null,
-          actualArrival: status != 'Cancelled' ? adjustedArrival?.add(Duration(minutes: delayMinutes - 5)) : null,
+          actualDeparture: status != 'Cancelled'
+              ? adjustedDeparture?.add(Duration(minutes: delayMinutes))
+              : null,
+          actualArrival: status != 'Cancelled'
+              ? adjustedArrival?.add(Duration(minutes: delayMinutes - 5))
+              : null,
           status: status,
           departureDelayMinutes: delayMinutes,
-          arrivalDelayMinutes: max(0, delayMinutes - 5), // Usually arrival makes up some time
+          arrivalDelayMinutes:
+              max(0, delayMinutes - 5), // Usually arrival makes up some time
           isCancelled: status == 'Cancelled',
         ));
       }
     }
 
     // Cache the combined result
-    await _flightBox.put(cacheKey, jsonEncode(history.map((f) => f.toJson()).toList()));
+    await _flightBox.put(
+        cacheKey, jsonEncode(history.map((f) => f.toJson()).toList()));
     return history;
   }
 
   // Helper to adjust time while preserving day of week patterns
-  DateTime? _adjustTimeToMatchDayOfWeek(DateTime? originalTime, DateTime targetDate) {
+  DateTime? _adjustTimeToMatchDayOfWeek(
+      DateTime? originalTime, DateTime targetDate) {
     if (originalTime == null) return null;
 
     // Keep the time but change the date
@@ -314,15 +348,18 @@ class FlightRepository {
   }
 
   // Get airport flight schedules
-  Future<Map<String, List<Flight>>> getAirportSchedule(String airportCode, String date) async {
+  Future<Map<String, List<Flight>>> getAirportSchedule(
+      String airportCode, String date) async {
     final cacheKey = 'schedule_${airportCode}_$date';
     try {
       final schedule = await _apiProvider.getAirportSchedule(airportCode, date);
       await _flightBox.put(
           cacheKey,
           jsonEncode({
-            'arrivals': schedule['arrivals']?.map((f) => f.toJson()).toList() ?? [],
-            'departures': schedule['departures']?.map((f) => f.toJson()).toList() ?? [],
+            'arrivals':
+                schedule['arrivals']?.map((f) => f.toJson()).toList() ?? [],
+            'departures':
+                schedule['departures']?.map((f) => f.toJson()).toList() ?? [],
           }));
       return schedule;
     } catch (e) {
@@ -331,8 +368,12 @@ class FlightRepository {
       if (cachedData != null) {
         final data = jsonDecode(cachedData);
         return {
-          'arrivals': (data['arrivals'] as List).map((json) => Flight.fromAeroDataBoxApi(json)).toList(),
-          'departures': (data['departures'] as List).map((json) => Flight.fromAeroDataBoxApi(json)).toList(),
+          'arrivals': (data['arrivals'] as List)
+              .map((json) => Flight.fromAeroDataBoxApi(json))
+              .toList(),
+          'departures': (data['departures'] as List)
+              .map((json) => Flight.fromAeroDataBoxApi(json))
+              .toList(),
         };
       }
       return {'arrivals': [], 'departures': []};
@@ -355,7 +396,8 @@ class FlightRepository {
   }
 
   // Get flight status and tracking
-  Future<Map<String, dynamic>?> getFlightStatus(String flightNumber, String date) async {
+  Future<Map<String, dynamic>?> getFlightStatus(
+      String flightNumber, String date) async {
     final cacheKey = 'status_${flightNumber}_$date';
     try {
       final status = await _apiProvider.getFlightStatus(flightNumber, date);
@@ -371,10 +413,12 @@ class FlightRepository {
   }
 
   // Get aircraft information
-  Future<Map<String, dynamic>?> getAircraftInfo(String registrationNumber) async {
+  Future<Map<String, dynamic>?> getAircraftInfo(
+      String registrationNumber) async {
     final cacheKey = 'aircraft_$registrationNumber';
     try {
-      final aircraftInfo = await _apiProvider.getAircraftInfo(registrationNumber);
+      final aircraftInfo =
+          await _apiProvider.getAircraftInfo(registrationNumber);
       if (aircraftInfo != null) {
         await _flightBox.put(cacheKey, jsonEncode(aircraftInfo));
       }
@@ -427,7 +471,8 @@ class FlightRepository {
   // Cache management methods
   Future<void> _saveCachedFlight(String flightNumber, Flight flight) async {
     await _flightBox.put('flight_$flightNumber', jsonEncode(flight.toJson()));
-    await _flightBox.put('flight_${flightNumber}_timestamp', DateTime.now().toIso8601String());
+    await _flightBox.put(
+        'flight_${flightNumber}_timestamp', DateTime.now().toIso8601String());
   }
 
   Flight? _getCachedFlight(String flightNumber) {
@@ -443,11 +488,18 @@ class FlightRepository {
           arrivalAirport: jsonData['arrivalAirport'] ?? '',
           departureCity: jsonData['departureCity'] ?? '',
           arrivalCity: jsonData['arrivalCity'] ?? '',
-          scheduledDeparture:
-              jsonData['scheduledDeparture'] != null ? DateTime.parse(jsonData['scheduledDeparture']) : null,
-          scheduledArrival: jsonData['scheduledArrival'] != null ? DateTime.parse(jsonData['scheduledArrival']) : null,
-          actualDeparture: jsonData['actualDeparture'] != null ? DateTime.parse(jsonData['actualDeparture']) : null,
-          actualArrival: jsonData['actualArrival'] != null ? DateTime.parse(jsonData['actualArrival']) : null,
+          scheduledDeparture: jsonData['scheduledDeparture'] != null
+              ? DateTime.parse(jsonData['scheduledDeparture'])
+              : null,
+          scheduledArrival: jsonData['scheduledArrival'] != null
+              ? DateTime.parse(jsonData['scheduledArrival'])
+              : null,
+          actualDeparture: jsonData['actualDeparture'] != null
+              ? DateTime.parse(jsonData['actualDeparture'])
+              : null,
+          actualArrival: jsonData['actualArrival'] != null
+              ? DateTime.parse(jsonData['actualArrival'])
+              : null,
           status: jsonData['status'] ?? 'Unknown',
           departureDelayMinutes: jsonData['departureDelayMinutes'] ?? 0,
           arrivalDelayMinutes: jsonData['arrivalDelayMinutes'] ?? 0,
@@ -456,14 +508,17 @@ class FlightRepository {
           aircraftRegistration: jsonData['aircraftRegistration'] ?? '',
           aircraftType: jsonData['aircraftType'] ?? '',
           onTimePercentage: jsonData['onTimePercentage']?.toDouble(),
-          alternativeRoutes: _parseAlternativeRoutes(jsonData['alternativeRoutes']),
+          alternativeRoutes:
+              _parseAlternativeRoutes(jsonData['alternativeRoutes']),
           delayHistory: _parseDelayHistory(jsonData['delayHistory']),
           isFavorite: jsonData['isFavorite'] ?? false,
           terminal: jsonData['terminal'],
           gate: jsonData['gate'],
           distance: jsonData['distance']?.toDouble(),
           flightDuration: jsonData['flightDuration'],
-          flightServices: jsonData['flightServices'] != null ? List<String>.from(jsonData['flightServices']) : null,
+          flightServices: jsonData['flightServices'] != null
+              ? List<String>.from(jsonData['flightServices'])
+              : null,
         );
       }
       return null;
@@ -477,7 +532,9 @@ class FlightRepository {
   List<FlightRoute> _parseAlternativeRoutes(dynamic routes) {
     if (routes == null) return [];
     try {
-      return (routes as List).map((routeJson) => FlightRoute.fromJson(routeJson)).toList();
+      return (routes as List)
+          .map((routeJson) => FlightRoute.fromJson(routeJson))
+          .toList();
     } catch (e) {
       print('Error parsing alternative routes: $e');
       return [];
@@ -487,7 +544,9 @@ class FlightRepository {
   List<FlightDelay> _parseDelayHistory(dynamic delays) {
     if (delays == null) return [];
     try {
-      return (delays as List).map((delayJson) => FlightDelay.fromJson(delayJson)).toList();
+      return (delays as List)
+          .map((delayJson) => FlightDelay.fromJson(delayJson))
+          .toList();
     } catch (e) {
       print('Error parsing delay history: $e');
       return [];
@@ -497,7 +556,8 @@ class FlightRepository {
   bool isCachedFlightValid(String flightNumber) {
     final timestampStr = _flightBox.get('flight_${flightNumber}_timestamp');
     if (timestampStr != null) {
-      return DateTime.now().difference(DateTime.parse(timestampStr)).inMinutes < 30;
+      return DateTime.now().difference(DateTime.parse(timestampStr)).inMinutes <
+          30;
     }
     return false;
   }
@@ -522,14 +582,16 @@ class FlightRepository {
     final favorites = getFavoriteFlights();
     if (!favorites.any((f) => f.flightNumber == flight.flightNumber)) {
       favorites.add(flight.copyWith(isFavorite: true));
-      await _flightBox.put('favorite_flights', jsonEncode(favorites.map((f) => f.toJson()).toList()));
+      await _flightBox.put('favorite_flights',
+          jsonEncode(favorites.map((f) => f.toJson()).toList()));
     }
   }
 
   Future<void> removeFavoriteFlight(String flightNumber) async {
     final favorites = getFavoriteFlights();
     favorites.removeWhere((f) => f.flightNumber == flightNumber);
-    await _flightBox.put('favorite_flights', jsonEncode(favorites.map((f) => f.toJson()).toList()));
+    await _flightBox.put('favorite_flights',
+        jsonEncode(favorites.map((f) => f.toJson()).toList()));
   }
 
   List<Flight> getFavoriteFlights() {
@@ -554,10 +616,18 @@ class FlightRepository {
             arrivalAirport: json['arrivalAirport'] ?? '',
             departureCity: json['departureCity'] ?? '',
             arrivalCity: json['arrivalCity'] ?? '',
-            scheduledDeparture: json['scheduledDeparture'] != null ? DateTime.parse(json['scheduledDeparture']) : null,
-            scheduledArrival: json['scheduledArrival'] != null ? DateTime.parse(json['scheduledArrival']) : null,
-            actualDeparture: json['actualDeparture'] != null ? DateTime.parse(json['actualDeparture']) : null,
-            actualArrival: json['actualArrival'] != null ? DateTime.parse(json['actualArrival']) : null,
+            scheduledDeparture: json['scheduledDeparture'] != null
+                ? DateTime.parse(json['scheduledDeparture'])
+                : null,
+            scheduledArrival: json['scheduledArrival'] != null
+                ? DateTime.parse(json['scheduledArrival'])
+                : null,
+            actualDeparture: json['actualDeparture'] != null
+                ? DateTime.parse(json['actualDeparture'])
+                : null,
+            actualArrival: json['actualArrival'] != null
+                ? DateTime.parse(json['actualArrival'])
+                : null,
             status: json['status'] ?? 'Unknown',
             departureDelayMinutes: json['departureDelayMinutes'] ?? 0,
             arrivalDelayMinutes: json['arrivalDelayMinutes'] ?? 0,
@@ -566,14 +636,17 @@ class FlightRepository {
             aircraftRegistration: json['aircraftRegistration'] ?? '',
             aircraftType: json['aircraftType'] ?? '',
             onTimePercentage: json['onTimePercentage']?.toDouble(),
-            alternativeRoutes: _parseAlternativeRoutes(json['alternativeRoutes']),
+            alternativeRoutes:
+                _parseAlternativeRoutes(json['alternativeRoutes']),
             delayHistory: _parseDelayHistory(json['delayHistory']),
             isFavorite: true, // Always true for favorites
             terminal: json['terminal'],
             gate: json['gate'],
             distance: json['distance']?.toDouble(),
             flightDuration: json['flightDuration'],
-            flightServices: json['flightServices'] != null ? List<String>.from(json['flightServices']) : null,
+            flightServices: json['flightServices'] != null
+                ? List<String>.from(json['flightServices'])
+                : null,
           );
           flights.add(flight);
         } catch (e) {
@@ -599,18 +672,22 @@ class FlightRepository {
     try {
       // Get current flight to base mock data on
       final currentFlight = await getFlightByNumber(flightNumber);
-      if (currentFlight == null || currentFlight.departureAirport.isEmpty || currentFlight.arrivalAirport.isEmpty) {
+      if (currentFlight == null ||
+          currentFlight.departureAirport.isEmpty ||
+          currentFlight.arrivalAirport.isEmpty) {
         return [];
       }
 
       // Extract numeric part safely
-      String numericPart = currentFlight.flightNumber.replaceAll(RegExp(r'[^0-9]'), '');
+      String numericPart =
+          currentFlight.flightNumber.replaceAll(RegExp(r'[^0-9]'), '');
       int flightNum = 0;
       try {
         flightNum = int.parse(numericPart);
       } catch (e) {
         print('Could not parse numeric part of flight number: $e');
-        flightNum = Random().nextInt(900) + 100; // Fallback to random 3-digit number
+        flightNum =
+            Random().nextInt(900) + 100; // Fallback to random 3-digit number
       }
 
       // Generate alternative routes
@@ -628,12 +705,14 @@ class FlightRepository {
           departureAirport: currentFlight.departureAirport,
           arrivalAirport: currentFlight.arrivalAirport,
           airline: _getRandomAlternativeAirline(currentFlight.airline),
-          flightNumber: "${_getRandomAlternativeAirline(currentFlight.airline)}123",
+          flightNumber:
+              "${_getRandomAlternativeAirline(currentFlight.airline)}123",
           reliability: 88.3,
         ),
       ];
 
-      await _flightBox.put(cacheKey, jsonEncode(routes.map((r) => r.toJson()).toList()));
+      await _flightBox.put(
+          cacheKey, jsonEncode(routes.map((r) => r.toJson()).toList()));
       return routes;
     } catch (e) {
       print('Error getting alternative routes: $e');
@@ -654,7 +733,8 @@ class FlightRepository {
   }
 
   // Generate mock delay history for a flight
-  Future<List<FlightDelay>> generateDelayHistory(String flightNumber, {int days = 30}) async {
+  Future<List<FlightDelay>> generateDelayHistory(String flightNumber,
+      {int days = 30}) async {
     final cacheKey = 'delay_history_$flightNumber';
     try {
       final flightHistory = await getFlightHistory(flightNumber, days: days);
@@ -672,7 +752,8 @@ class FlightRepository {
         }
       }
 
-      await _flightBox.put(cacheKey, jsonEncode(delayHistory.map((d) => d.toJson()).toList()));
+      await _flightBox.put(
+          cacheKey, jsonEncode(delayHistory.map((d) => d.toJson()).toList()));
       return delayHistory;
     } catch (e) {
       print('Error generating delay history: $e');
@@ -711,7 +792,8 @@ class FlightRepository {
   }
 
   // Add retry capability for all API calls
-  Future<T?> retryOperation<T>(Future<T?> Function() operation, {int maxRetries = 2}) async {
+  Future<T?> retryOperation<T>(Future<T?> Function() operation,
+      {int maxRetries = 2}) async {
     for (var i = 0; i < maxRetries; i++) {
       try {
         return await operation();

@@ -7,10 +7,12 @@ class Constants {
 
   // AeroDataBox API from RapidAPI
   static const String aeroDataBoxBaseUrl = 'https://aerodatabox.p.rapidapi.com';
-  static final String aeroDataBoxApiKey = dotenv.env['AERODATABOX_API_KEY']!; // Get from env in production
+  static final String aeroDataBoxApiKey =
+      dotenv.env['AERODATABOX_API_KEY']!; // Get from env in production
 
   // Map API Keys
-  static const String googleMapsApiKey = 'your-google-maps-api-key'; // Get from env in production
+  static const String googleMapsApiKey =
+      'your-google-maps-api-key'; // Get from env in production
 
   // RevenueCat API Keys
   static const String revenueCatApiKey = '';

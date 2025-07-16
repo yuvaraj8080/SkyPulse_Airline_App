@@ -77,7 +77,8 @@ class UserRepository {
   }
 
   // User profile methods
-  Future<User?> updateUserProfile(String userId, Map<String, dynamic> data) async {
+  Future<User?> updateUserProfile(
+      String userId, Map<String, dynamic> data) async {
     try {
       return await _supabaseProvider.updateUserProfile(userId, data);
     } catch (e) {
@@ -132,9 +133,11 @@ class UserRepository {
   }
 
   // Subscription methods
-  Future<bool> updateSubscription(String userId, SubscriptionType type, DateTime expiryDate) async {
+  Future<bool> updateSubscription(
+      String userId, SubscriptionType type, DateTime expiryDate) async {
     try {
-      return await _supabaseProvider.updateSubscription(userId, type, expiryDate);
+      return await _supabaseProvider.updateSubscription(
+          userId, type, expiryDate);
     } catch (e) {
       print('Error updating subscription: $e');
       return false;

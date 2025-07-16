@@ -246,7 +246,7 @@ class _FlightDetailViewState extends State<FlightDetailView> {
                           ),
                         ],
                       ),
-                      SizedBox(
+                      Container(
                         width: 80,
                         child: Stack(
                           alignment: Alignment.center,
@@ -565,7 +565,7 @@ class _FlightDetailViewState extends State<FlightDetailView> {
                     children: [
                       // Map background with subtle grid pattern
                       Center(
-                        child: SizedBox(
+                        child: Container(
                           width: double.infinity,
                           height: double.infinity,
                           child: CustomPaint(
@@ -926,7 +926,7 @@ class _FlightDetailViewState extends State<FlightDetailView> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    SizedBox(
+                    Container(
                       height: 24,
                       child: Stack(
                         children: [
@@ -2287,7 +2287,7 @@ class _FlightDetailViewState extends State<FlightDetailView> {
   }
 
   Widget _buildTearLine() {
-    return SizedBox(
+    return Container(
       height: 30,
       child: Row(
         children: List.generate(

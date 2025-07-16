@@ -19,7 +19,7 @@ class CustomButton extends StatelessWidget {
   final TextStyle? textStyle;
 
   const CustomButton({
-    super.key,
+    Key? key,
     required this.text,
     required this.onPressed,
     this.buttonType = ButtonType.filled,
@@ -31,7 +31,7 @@ class CustomButton extends StatelessWidget {
     this.padding,
     this.borderRadius,
     this.textStyle,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +110,7 @@ class CustomButton extends StatelessWidget {
         onPressed: null,
         style: ElevatedButton.styleFrom(
           backgroundColor: Get.isDarkMode ? AppColors.darkDivider : AppColors.lightDivider,
-          padding: padding ?? EdgeInsets.symmetric(horizontal: 24, vertical: height != null ? 0 : 12),
+          padding: padding ?? EdgeInsets.symmetric(horizontal: 24, vertical: this.height != null ? 0 : 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius ?? 8),
           ),

@@ -18,7 +18,7 @@ class ProfileView extends StatelessWidget {
   final TextEditingController _nameController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  ProfileView({super.key});
+  ProfileView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

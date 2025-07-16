@@ -12,10 +12,11 @@ class SignupView extends StatelessWidget {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  SignupView({super.key});
+  SignupView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,8 @@ class SignupView extends StatelessWidget {
         title: Text('Create Account', style: AppTextStyles.headline6),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Get.isDarkMode ? AppColors.darkText : AppColors.lightText,
+        foregroundColor:
+            Get.isDarkMode ? AppColors.darkText : AppColors.lightText,
       ),
       body: Obx(
         () => _authController.isLoading
@@ -78,7 +80,9 @@ class SignupView extends StatelessWidget {
         Text(
           'Create an account to track flights, get real-time updates, and more.',
           style: AppTextStyles.bodyText1.copyWith(
-            color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            color: Get.isDarkMode
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
           ),
         ),
       ],
@@ -179,7 +183,8 @@ class SignupView extends StatelessWidget {
           child: RichText(
             text: TextSpan(
               style: AppTextStyles.bodyText2.copyWith(
-                color: Get.isDarkMode ? AppColors.darkText : AppColors.lightText,
+                color:
+                    Get.isDarkMode ? AppColors.darkText : AppColors.lightText,
               ),
               children: [
                 const TextSpan(

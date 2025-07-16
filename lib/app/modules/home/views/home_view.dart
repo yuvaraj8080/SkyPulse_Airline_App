@@ -15,7 +15,7 @@ import '../../../theme/app_text_styles.dart';
 import '../../../widgets/flight_card.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  const HomeView({Key? key}) : super(key: key);
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -24,7 +24,8 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final AuthController _authController = Get.find<AuthController>();
   final FlightController _flightController = Get.find<FlightController>();
-  final SubscriptionController _subscriptionController = Get.find<SubscriptionController>();
+  final SubscriptionController _subscriptionController =
+      Get.find<SubscriptionController>();
 
   int _currentIndex = 0;
 
@@ -39,7 +40,8 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final AuthController authController = Get.find<AuthController>();
     final FlightController flightController = Get.find<FlightController>();
-    final SubscriptionController subscriptionController = Get.find<SubscriptionController>();
+    final SubscriptionController subscriptionController =
+        Get.find<SubscriptionController>();
 
     // Load saved flights when home tab is shown
     flightController.loadSavedFlights();
@@ -50,7 +52,9 @@ class _HomeViewState extends State<HomeView> {
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+        unselectedItemColor: Get.isDarkMode
+            ? AppColors.darkTextSecondary
+            : AppColors.lightTextSecondary,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
@@ -84,13 +88,14 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class _HomeTab extends StatelessWidget {
-  const _HomeTab({super.key});
+  const _HomeTab({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final AuthController authController = Get.find<AuthController>();
     final FlightController flightController = Get.find<FlightController>();
-    final SubscriptionController subscriptionController = Get.find<SubscriptionController>();
+    final SubscriptionController subscriptionController =
+        Get.find<SubscriptionController>();
 
     // Load saved flights when home tab is shown
     flightController.loadSavedFlights();
@@ -108,7 +113,7 @@ class _HomeTab extends StatelessWidget {
               child: Icon(Icons.flight, color: AppColors.primary),
             ),
             SizedBox(width: 8),
-            Text('SkyPulse', style: AppTextStyles.headline6),
+            Text('SkyLine', style: AppTextStyles.headline6),
           ],
         ),
         actions: [
@@ -148,7 +153,8 @@ class _HomeTab extends StatelessWidget {
               const SizedBox(height: 16),
               _buildQuickActionGrid(),
               const SizedBox(height: 24),
-              if (subscriptionController.currentSubscription == SubscriptionType.free)
+              if (subscriptionController.currentSubscription ==
+                  SubscriptionType.free)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: _buildSubscriptionCard(subscriptionController),
@@ -196,7 +202,8 @@ class _HomeTab extends StatelessWidget {
                       authController.user?.fullName?.isNotEmpty == true
                           ? authController.user!.fullName![0].toUpperCase()
                           : 'T',
-                      style: AppTextStyles.headline5.copyWith(color: Colors.white),
+                      style:
+                          AppTextStyles.headline5.copyWith(color: Colors.white),
                     ),
                   ),
                   SizedBox(width: 12),
@@ -211,8 +218,9 @@ class _HomeTab extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        authController.user?.fullName ?? 'Traveler',
-                        style: AppTextStyles.headline5.copyWith(color: Colors.white),
+                        '${authController.user?.fullName ?? 'Traveler'}',
+                        style: AppTextStyles.headline5
+                            .copyWith(color: Colors.white),
                       ),
                     ],
                   ),
@@ -222,7 +230,8 @@ class _HomeTab extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               'Where are you flying today?',
-              style: AppTextStyles.subtitle1.copyWith(color: Colors.white.withOpacity(0.9)),
+              style: AppTextStyles.subtitle1
+                  .copyWith(color: Colors.white.withOpacity(0.9)),
             ),
             SizedBox(height: 20),
             Row(
@@ -237,7 +246,8 @@ class _HomeTab extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       elevation: 3,
                     ),
                   ),
@@ -269,7 +279,8 @@ class _HomeTab extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.flight_takeoff, color: AppColors.primary, size: 20),
+                    Icon(Icons.flight_takeoff,
+                        color: AppColors.primary, size: 20),
                     SizedBox(width: 8),
                     Text('Your Flights', style: AppTextStyles.headline5),
                   ],
@@ -280,7 +291,8 @@ class _HomeTab extends StatelessWidget {
                   },
                   child: Text(
                     'View All',
-                    style: AppTextStyles.button.copyWith(color: AppColors.primary),
+                    style:
+                        AppTextStyles.button.copyWith(color: AppColors.primary),
                   ),
                 ),
               ],
@@ -298,7 +310,10 @@ class _HomeTab extends StatelessWidget {
 
   Widget _buildNoSavedFlightsCard() {
     return Animate(
-      effects: const [FadeEffect(delay: Duration(milliseconds: 300)), SlideEffect(delay: Duration(milliseconds: 300))],
+      effects: const [
+        FadeEffect(delay: Duration(milliseconds: 300)),
+        SlideEffect(delay: Duration(milliseconds: 300))
+      ],
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
@@ -338,7 +353,9 @@ class _HomeTab extends StatelessWidget {
               Text(
                 'Start tracking flights by searching for a flight number or route',
                 style: AppTextStyles.bodyText2.copyWith(
-                  color: Get.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  color: Get.isDarkMode
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -392,7 +409,9 @@ class _HomeTab extends StatelessWidget {
                 flightController.setSelectedFlight(displayFlights[index]);
                 Get.toNamed(
                   Routes.FLIGHT_DETAIL,
-                  arguments: {'flightNumber': displayFlights[index].flightNumber},
+                  arguments: {
+                    'flightNumber': displayFlights[index].flightNumber
+                  },
                 );
               },
               showFavoriteIcon: true,
@@ -494,7 +513,8 @@ class _HomeTab extends StatelessWidget {
               SizedBox(height: 10),
               Text(
                 title,
-                style: AppTextStyles.subtitle2.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.subtitle2
+                    .copyWith(fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -506,7 +526,10 @@ class _HomeTab extends StatelessWidget {
 
   Widget _buildSubscriptionCard(SubscriptionController subscriptionController) {
     return Animate(
-      effects: const [FadeEffect(delay: Duration(milliseconds: 400)), SlideEffect(delay: Duration(milliseconds: 400))],
+      effects: const [
+        FadeEffect(delay: Duration(milliseconds: 400)),
+        SlideEffect(delay: Duration(milliseconds: 400))
+      ],
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(
@@ -552,7 +575,8 @@ class _HomeTab extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Get early delay notifications, detailed flight predictions, and more!',
-                style: AppTextStyles.bodyText2.copyWith(color: Colors.white.withOpacity(0.9)),
+                style: AppTextStyles.bodyText2
+                    .copyWith(color: Colors.white.withOpacity(0.9)),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
